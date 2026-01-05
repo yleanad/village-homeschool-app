@@ -147,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-secondary {
   background-color: var(--warm-sand);
   color: var(--forest-canopy);
-  border: 2px solid var(--forest-canopy);
+  border: 2px solid var(--coral-bloom);
   border-radius: 9999px;
   padding: 0.75rem 2rem;
   font-weight: 600;
@@ -155,7 +155,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-secondary:hover {
-  background-color: var(--golden-hour);
+  background-color: var(--coral-bloom);
+  color: white;
+  border-color: var(--coral-bloom);
 }
 
 .btn-coral {
