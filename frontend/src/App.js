@@ -23,6 +23,8 @@ import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import Onboarding from "@/pages/Onboarding";
 import Groups from "@/pages/Groups";
 import GroupDetail from "@/pages/GroupDetail";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 
 // Components
 import InstallPWA from "@/components/InstallPWA";
