@@ -166,6 +166,43 @@ class MeetupRequestResponse(BaseModel):
     status: str = "pending"  # pending, accepted, declined
     created_at: str
 
+class CoopGroupCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    city: str
+    state: str
+    zip_code: str
+    group_type: str = "co-op"  # co-op, support_group, activity_club
+    focus_areas: List[str] = []  # subjects/activities the group focuses on
+    age_range: Optional[str] = None
+    meeting_frequency: Optional[str] = None  # weekly, bi-weekly, monthly
+    max_members: Optional[int] = None
+    is_private: bool = False
+
+class CoopGroupResponse(BaseModel):
+    group_id: str
+    owner_family_id: str
+    owner_family_name: str
+    name: str
+    description: Optional[str] = None
+    city: str
+    state: str
+    zip_code: str
+    group_type: str
+    focus_areas: List[str] = []
+    age_range: Optional[str] = None
+    meeting_frequency: Optional[str] = None
+    max_members: Optional[int] = None
+    is_private: bool = False
+    members: List[Dict[str, Any]] = []
+    member_count: int = 0
+    created_at: str
+
+class CoopAnnouncementCreate(BaseModel):
+    title: str
+    content: str
+    pinned: bool = False
+
 # ============ HELPER FUNCTIONS ============
 
 def hash_password(password: str) -> str:
