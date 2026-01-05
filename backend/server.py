@@ -858,6 +858,27 @@ async def create_event(event: EventCreate, user: dict = Depends(get_current_user
     }
     
     await db.events.insert_one(event_doc)
+    
+    # Notify nearby families about the new event
+    nearby_families = await db.family_profiles.find(
+        {
+            "user_id": {"$ne": user["user_id"]},
+            "$or": [
+                {"city": {"$regex": event.city, "$options": "i"}},
+                {"zip_code": event.zip_code}
+            ]
+        },
+        {"user_id": 1}
+    ).to_list(50)
+    
+    nearby_user_ids = [f["user_id"] for f in nearby_families]
+    if nearby_user_ids:
+        await notify_new_event(
+            event_title=event.title,
+            host_family_name=my_profile["family_name"],
+            nearby_user_ids=nearby_user_ids
+        )
+    
     return EventResponse(**event_doc)
 
 @api_router.get("/events")
