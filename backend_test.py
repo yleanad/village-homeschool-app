@@ -333,6 +333,165 @@ class VillageFriendsAPITester:
         else:
             self.log_test("Calendar Events", False, f"Status: {response.status_code}, Response: {response.text}")
 
+    def test_photo_upload(self):
+        """Test profile photo upload"""
+        if not self.user_token or not self.family_profile:
+            self.log_test("Photo Upload", False, "No auth token or family profile available")
+            return
+            
+        # Create a simple base64 image (1x1 pixel PNG)
+        base64_image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        
+        data = {
+            "image_data": base64_image
+        }
+        
+        success, response = self.make_request('POST', 'family/profile/photo', data, expected_status=200)
+        if success:
+            try:
+                result = response.json()
+                if 'photo_url' in result and 'message' in result:
+                    self.log_test("Photo Upload", True)
+                else:
+                    self.log_test("Photo Upload", False, "Missing photo_url or message in response")
+            except:
+                self.log_test("Photo Upload", False, "Invalid JSON response")
+        else:
+            self.log_test("Photo Upload", False, f"Status: {response.status_code}, Response: {response.text}")
+
+    def test_groups_endpoints(self):
+        """Test group management endpoints"""
+        if not self.user_token:
+            self.log_test("Groups Endpoints", False, "No auth token available")
+            return
+            
+        # Test get groups
+        success, response = self.make_request('GET', 'groups', expected_status=200)
+        if success:
+            try:
+                result = response.json()
+                if isinstance(result, list):
+                    self.log_test("Get Groups", True)
+                else:
+                    self.log_test("Get Groups", False, "Response is not a list")
+            except:
+                self.log_test("Get Groups", False, "Invalid JSON response")
+        else:
+            self.log_test("Get Groups", False, f"Status: {response.status_code}, Response: {response.text}")
+        
+        # Test get my groups
+        success, response = self.make_request('GET', 'groups/my', expected_status=200)
+        if success:
+            try:
+                result = response.json()
+                if 'owned' in result and 'member_of' in result:
+                    self.log_test("Get My Groups", True)
+                else:
+                    self.log_test("Get My Groups", False, "Missing owned or member_of in response")
+            except:
+                self.log_test("Get My Groups", False, "Invalid JSON response")
+        else:
+            self.log_test("Get My Groups", False, f"Status: {response.status_code}, Response: {response.text}")
+
+    def test_create_group_premium_required(self):
+        """Test group creation (should fail without premium)"""
+        if not self.user_token or not self.family_profile:
+            self.log_test("Create Group (Premium Required)", False, "No auth token or family profile available")
+            return
+            
+        data = {
+            "name": "Test Co-op",
+            "description": "A test co-op for API testing",
+            "city": "Austin",
+            "state": "TX",
+            "zip_code": "78701",
+            "group_type": "co-op",
+            "focus_areas": ["Math", "Science"],
+            "age_range": "6-12",
+            "meeting_frequency": "weekly",
+            "is_private": False
+        }
+        
+        # This should fail with 403 since user doesn't have premium
+        success, response = self.make_request('POST', 'groups', data, expected_status=403)
+        if success:
+            self.log_test("Create Group (Premium Required)", True)
+        else:
+            self.log_test("Create Group (Premium Required)", False, f"Expected 403, got {response.status_code}")
+
+    def test_set_premium_and_create_group(self):
+        """Test setting premium status and creating group"""
+        if not self.user_token or not self.user_data:
+            self.log_test("Set Premium & Create Group", False, "No auth token or user data available")
+            return
+            
+        # First, manually set user to premium status via direct database update
+        # This simulates having an active subscription
+        import pymongo
+        try:
+            client = pymongo.MongoClient("mongodb://localhost:27017")
+            db = client["test_database"]
+            
+            # Update user subscription status
+            result = db.users.update_one(
+                {"user_id": self.user_data["user_id"]},
+                {"$set": {"subscription_status": "active"}}
+            )
+            
+            if result.modified_count > 0:
+                # Now try to create a group
+                data = {
+                    "name": "Test Premium Co-op",
+                    "description": "A test co-op for premium API testing",
+                    "city": "Austin",
+                    "state": "TX",
+                    "zip_code": "78701",
+                    "group_type": "co-op",
+                    "focus_areas": ["Math", "Science"],
+                    "age_range": "6-12",
+                    "meeting_frequency": "weekly",
+                    "is_private": False
+                }
+                
+                success, response = self.make_request('POST', 'groups', data, expected_status=200)
+                if success:
+                    try:
+                        result = response.json()
+                        if 'group_id' in result and 'name' in result:
+                            self.test_group_id = result['group_id']
+                            self.log_test("Set Premium & Create Group", True)
+                        else:
+                            self.log_test("Set Premium & Create Group", False, "Missing group data in response")
+                    except:
+                        self.log_test("Set Premium & Create Group", False, "Invalid JSON response")
+                else:
+                    self.log_test("Set Premium & Create Group", False, f"Status: {response.status_code}, Response: {response.text}")
+            else:
+                self.log_test("Set Premium & Create Group", False, "Failed to update user subscription status")
+                
+        except Exception as e:
+            self.log_test("Set Premium & Create Group", False, f"Database error: {str(e)}")
+
+    def test_group_member_management(self):
+        """Test group member role management"""
+        if not self.user_token or not hasattr(self, 'test_group_id'):
+            self.log_test("Group Member Management", False, "No auth token or test group available")
+            return
+            
+        # Test getting group details
+        success, response = self.make_request('GET', f'groups/{self.test_group_id}', expected_status=200)
+        if success:
+            try:
+                result = response.json()
+                if 'group_id' in result and 'members' in result:
+                    self.log_test("Group Member Management", True)
+                else:
+                    self.log_test("Group Member Management", False, "Missing group or members data")
+            except:
+                self.log_test("Group Member Management", False, "Invalid JSON response")
+        else:
+            self.log_test("Group Member Management", False, f"Status: {response.status_code}, Response: {response.text}")
+
     def run_all_tests(self):
         """Run all API tests"""
         print(f"🚀 Starting Village Friends API Tests")
