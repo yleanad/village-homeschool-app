@@ -88,7 +88,7 @@ const Landing = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block px-4 py-2 bg-[#5B9A8B]/10 text-[#5B9A8B] rounded-full text-sm font-semibold mb-6">
+              <span className="inline-block px-4 py-2 bg-[#C8907A]/15 text-[#B07A66] rounded-full text-sm font-semibold mb-6">
                 🏡 Building Community Together
               </span>
               <h1 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-bold text-[#2C3E50] leading-tight mb-6">
@@ -112,11 +112,11 @@ const Landing = () => {
               </div>
               <div className="flex items-center gap-6 mt-8 text-sm text-[#5F6F75]">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#5B9A8B]" />
+                  <Check className="w-4 h-4 text-[#C8907A]" />
                   <span>14-day free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#5B9A8B]" />
+                  <Check className="w-4 h-4 text-[#C8907A]" />
                   <span>No credit card required</span>
                 </div>
               </div>
@@ -183,7 +183,7 @@ const Landing = () => {
                 transition={{ delay: index * 0.1 }}
                 className="bg-[#F5F3EE] rounded-2xl p-6 card-hover"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#5B9A8B]/10 flex items-center justify-center text-[#5B9A8B] mb-4">
+                <div className="w-12 h-12 rounded-xl bg-[#C8907A]/15 flex items-center justify-center text-[#C8907A] mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">
@@ -269,7 +269,7 @@ const Landing = () => {
                 transition={{ delay: index * 0.15 }}
                 className="text-center"
               >
-                <div className="w-16 h-16 rounded-full bg-[#5B9A8B] text-white font-fraunces text-2xl font-bold flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-full bg-[#C8907A] text-white font-fraunces text-2xl font-bold flex items-center justify-center mx-auto mb-4">
                   {item.step}
                 </div>
                 <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">{item.title}</h3>
@@ -336,7 +336,7 @@ const Landing = () => {
                 <span className="font-fraunces text-4xl font-bold text-[#2C3E50]">$89.99</span>
                 <span className="text-[#5F6F75]">/year</span>
               </div>
-              <p className="text-sm text-[#5B9A8B] font-medium mb-4">Save $30 compared to monthly!</p>
+              <p className="text-sm text-[#C8907A] font-medium mb-4">Save $30 compared to monthly!</p>
               <ul className="space-y-3 mb-6">
                 {["Everything in Monthly", "Co-op & Group Management", "Post announcements", "Group events", "Priority support"].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-[#5F6F75]">
