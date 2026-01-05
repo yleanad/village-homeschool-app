@@ -215,6 +215,144 @@ class CoopAnnouncementCreate(BaseModel):
     content: str
     pinned: bool = False
 
+# Push Notification Models
+class PushSubscription(BaseModel):
+    endpoint: str
+    keys: Dict[str, str]  # {p256dh, auth}
+
+class NotificationPreferences(BaseModel):
+    messages: bool = True
+    events: bool = True
+    meetup_requests: bool = True
+    group_updates: bool = True
+
+# ============ PUSH NOTIFICATION HELPER FUNCTIONS ============
+
+async def send_push_notification(user_id: str, title: str, body: str, url: str = "/", data: Dict = None):
+    """Send push notification to all subscriptions for a user"""
+    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
+        logger.warning("VAPID keys not configured, skipping push notification")
+        return
+    
+    subscriptions = await db.push_subscriptions.find({"user_id": user_id}).to_list(10)
+    
+    if not subscriptions:
+        return
+    
+    payload = json.dumps({
+        "title": title,
+        "body": body,
+        "url": url,
+        "data": data or {},
+        "icon": "/icons/icon-192x192.png",
+        "badge": "/icons/icon-72x72.png"
+    })
+    
+    vapid_claims = {
+        "sub": f"mailto:{VAPID_CLAIMS_EMAIL}"
+    }
+    
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub["endpoint"],
+                    "keys": sub["keys"]
+                },
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=vapid_claims
+            )
+            logger.info(f"Push notification sent to user {user_id}")
+        except WebPushException as e:
+            logger.error(f"Push notification failed: {e}")
+            # Remove invalid subscriptions
+            if e.response and e.response.status_code in [404, 410]:
+                await db.push_subscriptions.delete_one({"_id": sub["_id"]})
+                logger.info(f"Removed invalid subscription for user {user_id}")
+        except Exception as e:
+            logger.error(f"Push notification error: {e}")
+
+async def notify_new_message(sender_family_name: str, recipient_user_id: str, preview: str):
+    """Send notification for new message"""
+    # Check user preferences
+    user = await db.users.find_one({"user_id": recipient_user_id})
+    prefs = user.get("notification_preferences", {})
+    if not prefs.get("messages", True):
+        return
+    
+    await send_push_notification(
+        user_id=recipient_user_id,
+        title=f"New message from {sender_family_name}",
+        body=preview[:100] + "..." if len(preview) > 100 else preview,
+        url="/messages"
+    )
+
+async def notify_new_event(event_title: str, host_family_name: str, nearby_user_ids: List[str]):
+    """Send notification for new event to nearby users"""
+    for user_id in nearby_user_ids:
+        user = await db.users.find_one({"user_id": user_id})
+        prefs = user.get("notification_preferences", {}) if user else {}
+        if not prefs.get("events", True):
+            continue
+        
+        await send_push_notification(
+            user_id=user_id,
+            title="New Event Near You!",
+            body=f"{host_family_name} is hosting: {event_title}",
+            url="/events"
+        )
+
+async def notify_meetup_request(requester_family_name: str, target_user_id: str, status: str = "new"):
+    """Send notification for meetup request"""
+    user = await db.users.find_one({"user_id": target_user_id})
+    prefs = user.get("notification_preferences", {}) if user else {}
+    if not prefs.get("meetup_requests", True):
+        return
+    
+    if status == "new":
+        title = "New Meetup Request!"
+        body = f"{requester_family_name} wants to meet up with your family"
+    elif status == "accepted":
+        title = "Meetup Request Accepted!"
+        body = f"{requester_family_name} accepted your meetup request"
+    elif status == "declined":
+        title = "Meetup Request Update"
+        body = f"{requester_family_name} couldn't make the meetup"
+    else:
+        return
+    
+    await send_push_notification(
+        user_id=target_user_id,
+        title=title,
+        body=body,
+        url="/dashboard"
+    )
+
+async def notify_group_update(group_name: str, member_user_ids: List[str], update_type: str, details: str = ""):
+    """Send notification for group updates"""
+    for user_id in member_user_ids:
+        user = await db.users.find_one({"user_id": user_id})
+        prefs = user.get("notification_preferences", {}) if user else {}
+        if not prefs.get("group_updates", True):
+            continue
+        
+        if update_type == "announcement":
+            title = f"New announcement in {group_name}"
+        elif update_type == "new_member":
+            title = f"New member joined {group_name}"
+        elif update_type == "event":
+            title = f"New event in {group_name}"
+        else:
+            title = f"Update in {group_name}"
+        
+        await send_push_notification(
+            user_id=user_id,
+            title=title,
+            body=details,
+            url="/groups"
+        )
+
 # ============ HELPER FUNCTIONS ============
 
 def hash_password(password: str) -> str:
