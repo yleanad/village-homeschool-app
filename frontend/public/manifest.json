@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "short_name": "Village Friends",
   "name": "Village Friends - Homeschool Family Community",
   "description": "Connect with homeschool families in your area, plan meetups, and build your village",
@@ -52,13 +53,14 @@
       "purpose": "maskable any"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "theme_color": "#C8907A",
   "background_color": "#F5F3EE",
   "orientation": "portrait-primary",
   "scope": "/",
   "categories": ["social", "lifestyle", "education"],
+  "prefer_related_applications": false,
   "shortcuts": [
     {
       "name": "Discover Families",
