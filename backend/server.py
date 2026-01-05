@@ -1129,6 +1129,19 @@ async def create_meetup_request(request_data: MeetupRequestCreate, user: dict = 
     }
     
     await db.meetup_requests.insert_one(request_doc)
+    
+    # Send push notification to target family
+    target_profile = await db.family_profiles.find_one(
+        {"family_id": request_data.target_family_id},
+        {"user_id": 1}
+    )
+    if target_profile:
+        await notify_meetup_request(
+            requester_family_name=my_profile["family_name"],
+            target_user_id=target_profile["user_id"],
+            status="new"
+        )
+    
     return MeetupRequestResponse(**request_doc)
 
 @api_router.get("/meetup-requests")
