@@ -424,12 +424,12 @@ const Landing = () => {
               <span className="font-fraunces text-white font-semibold">Village Friends</span>
             </div>
             <div className="flex items-center gap-6 text-white/70 text-sm">
-              <a href="#" className="hover:text-white transition">Privacy</a>
-              <a href="#" className="hover:text-white transition">Terms</a>
-              <a href="#" className="hover:text-white transition">Contact</a>
+              <Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-white transition">Terms of Service</Link>
+              <a href="mailto:support@villagefriends.app" className="hover:text-white transition">Contact</a>
             </div>
             <p className="text-white/50 text-sm">
-              © 2024 Village Friends. All rights reserved.
+              © 2025 Village Friends. All rights reserved.
             </p>
           </div>
         </div>
