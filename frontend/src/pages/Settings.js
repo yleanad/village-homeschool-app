@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Shield, CreditCard, Bell, Plus, X } from 'lucide-react';
+import { User, MapPin, Shield, CreditCard, Bell, Plus, X, Camera, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,8 @@ const INTERESTS = [
 const Settings = () => {
   const { user, familyProfile, updateFamilyProfile, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     family_name: familyProfile?.family_name || '',
     bio: familyProfile?.bio || '',
@@ -39,6 +41,54 @@ const Settings = () => {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const response = await axios.post(
+            `${API_URL}/api/family/profile/photo`,
+            { image_data: reader.result },
+            { withCredentials: true }
+          );
+          
+          // Update the family profile with new photo URL
+          updateFamilyProfile({
+            ...familyProfile,
+            profile_picture: response.data.photo_url
+          });
+          
+          toast.success('Profile photo updated!');
+        } catch (error) {
+          toast.error(error.response?.data?.detail || 'Failed to upload photo');
+        } finally {
+          setUploadingPhoto(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error('Failed to read image file');
+      setUploadingPhoto(false);
+    }
   };
 
   const toggleInterest = (interest) => {
