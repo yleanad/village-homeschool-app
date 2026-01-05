@@ -976,6 +976,19 @@ async def send_message(message: MessageCreate, user: dict = Depends(get_current_
     }
     
     await db.messages.insert_one(message_doc)
+    
+    # Send push notification to recipient
+    recipient_profile = await db.family_profiles.find_one(
+        {"family_id": message.recipient_family_id},
+        {"user_id": 1}
+    )
+    if recipient_profile:
+        await notify_new_message(
+            sender_family_name=my_profile["family_name"],
+            recipient_user_id=recipient_profile["user_id"],
+            preview=message.content
+        )
+    
     return MessageResponse(**message_doc)
 
 @api_router.get("/messages")
