@@ -1230,6 +1230,206 @@ async def delete_group(group_id: str, user: dict = Depends(get_current_user)):
     await db.coop_groups.delete_one({"group_id": group_id})
     return {"message": "Group deleted"}
 
+# ============ GROUP MEMBER ROLE MANAGEMENT ============
+
+class MemberRoleUpdate(BaseModel):
+    family_id: str
+    role: str  # member, admin
+
+@api_router.put("/groups/{group_id}/members/role")
+async def update_member_role(group_id: str, role_update: MemberRoleUpdate, user: dict = Depends(get_current_user)):
+    """Update a member's role (owner only) - can promote to admin or demote to member"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Only owner can change roles
+    if group["owner_family_id"] != my_profile["family_id"]:
+        raise HTTPException(status_code=403, detail="Only the owner can change member roles")
+    
+    # Can't change owner's role
+    if role_update.family_id == group["owner_family_id"]:
+        raise HTTPException(status_code=400, detail="Cannot change owner's role")
+    
+    # Validate role
+    if role_update.role not in ["member", "admin"]:
+        raise HTTPException(status_code=400, detail="Role must be 'member' or 'admin'")
+    
+    # Check if target is a member
+    member_exists = any(m["family_id"] == role_update.family_id for m in group.get("members", []))
+    if not member_exists:
+        raise HTTPException(status_code=404, detail="Member not found in group")
+    
+    # Update the member's role
+    await db.coop_groups.update_one(
+        {"group_id": group_id, "members.family_id": role_update.family_id},
+        {"$set": {"members.$.role": role_update.role}}
+    )
+    
+    return {"message": f"Member role updated to {role_update.role}"}
+
+@api_router.delete("/groups/{group_id}/members/{family_id}")
+async def remove_member(group_id: str, family_id: str, user: dict = Depends(get_current_user)):
+    """Remove a member from the group (owner or admin only)"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if requester is owner or admin
+    requester_member = next((m for m in group.get("members", []) if m["family_id"] == my_profile["family_id"]), None)
+    if not requester_member or requester_member.get("role") not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Only owners and admins can remove members")
+    
+    # Can't remove the owner
+    if family_id == group["owner_family_id"]:
+        raise HTTPException(status_code=400, detail="Cannot remove the owner")
+    
+    # Admins can't remove other admins (only owner can)
+    target_member = next((m for m in group.get("members", []) if m["family_id"] == family_id), None)
+    if target_member and target_member.get("role") == "admin" and requester_member.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Only the owner can remove admins")
+    
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$pull": {"members": {"family_id": family_id}}, "$inc": {"member_count": -1}}
+    )
+    
+    return {"message": "Member removed"}
+
+@api_router.post("/groups/{group_id}/transfer-ownership")
+async def transfer_ownership(group_id: str, new_owner_family_id: str, user: dict = Depends(get_current_user)):
+    """Transfer group ownership to another member"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Only owner can transfer
+    if group["owner_family_id"] != my_profile["family_id"]:
+        raise HTTPException(status_code=403, detail="Only the owner can transfer ownership")
+    
+    # Check if new owner is a member
+    new_owner_member = next((m for m in group.get("members", []) if m["family_id"] == new_owner_family_id), None)
+    if not new_owner_member:
+        raise HTTPException(status_code=404, detail="New owner must be a group member")
+    
+    # Get new owner's family name
+    new_owner_profile = await db.family_profiles.find_one({"family_id": new_owner_family_id}, {"_id": 0})
+    
+    # Update group owner
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$set": {
+            "owner_family_id": new_owner_family_id,
+            "owner_family_name": new_owner_profile["family_name"] if new_owner_profile else "Unknown"
+        }}
+    )
+    
+    # Update member roles - new owner becomes owner, old owner becomes admin
+    await db.coop_groups.update_one(
+        {"group_id": group_id, "members.family_id": new_owner_family_id},
+        {"$set": {"members.$.role": "owner"}}
+    )
+    await db.coop_groups.update_one(
+        {"group_id": group_id, "members.family_id": my_profile["family_id"]},
+        {"$set": {"members.$.role": "admin"}}
+    )
+    
+    return {"message": "Ownership transferred successfully"}
+
+@api_router.get("/groups/{group_id}/join-requests")
+async def get_join_requests(group_id: str, user: dict = Depends(get_current_user)):
+    """Get pending join requests for a private group (owner/admin only)"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if requester is owner or admin
+    member = next((m for m in group.get("members", []) if m["family_id"] == my_profile["family_id"]), None)
+    if not member or member.get("role") not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Only owners and admins can view join requests")
+    
+    return group.get("join_requests", [])
+
+@api_router.post("/groups/{group_id}/join-requests/{family_id}/approve")
+async def approve_join_request(group_id: str, family_id: str, user: dict = Depends(get_current_user)):
+    """Approve a join request (owner/admin only)"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if requester is owner or admin
+    member = next((m for m in group.get("members", []) if m["family_id"] == my_profile["family_id"]), None)
+    if not member or member.get("role") not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Only owners and admins can approve requests")
+    
+    # Find the join request
+    join_request = next((r for r in group.get("join_requests", []) if r["family_id"] == family_id), None)
+    if not join_request:
+        raise HTTPException(status_code=404, detail="Join request not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    new_member = {
+        "family_id": family_id,
+        "family_name": join_request["family_name"],
+        "role": "member",
+        "joined_at": now
+    }
+    
+    # Add member and remove from join requests
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {
+            "$push": {"members": new_member},
+            "$pull": {"join_requests": {"family_id": family_id}},
+            "$inc": {"member_count": 1}
+        }
+    )
+    
+    return {"message": "Join request approved"}
+
+@api_router.post("/groups/{group_id}/join-requests/{family_id}/reject")
+async def reject_join_request(group_id: str, family_id: str, user: dict = Depends(get_current_user)):
+    """Reject a join request (owner/admin only)"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if requester is owner or admin
+    member = next((m for m in group.get("members", []) if m["family_id"] == my_profile["family_id"]), None)
+    if not member or member.get("role") not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Only owners and admins can reject requests")
+    
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$pull": {"join_requests": {"family_id": family_id}}}
+    )
+    
+    return {"message": "Join request rejected"}
+
 # ============ SUBSCRIPTION ENDPOINTS ============
 
 @api_router.get("/subscription/plans")
