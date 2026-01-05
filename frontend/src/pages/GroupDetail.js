@@ -224,7 +224,7 @@ const GroupDetail = () => {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-[#5B9A8B]/20 text-[#5B9A8B]">
+                  <span className="text-sm font-medium px-3 py-1 rounded-full bg-[#C8907A]/20 text-[#C8907A]">
                     {group.group_type.replace('_', ' ')}
                   </span>
                   {group.is_private && (
@@ -242,7 +242,7 @@ const GroupDetail = () => {
                 </p>
                 <p className="text-[#5F6F75] text-sm mt-1">
                   Organized by{' '}
-                  <Link to={`/family/${group.owner_family_id}`} className="text-[#5B9A8B] font-medium hover:underline">
+                  <Link to={`/family/${group.owner_family_id}`} className="text-[#C8907A] font-medium hover:underline">
                     {group.owner_family_name}
                   </Link>
                 </p>
@@ -432,7 +432,7 @@ const GroupDetail = () => {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="bg-[#5B9A8B] hover:bg-[#4A8275] text-white h-7 px-2"
+                            className="bg-[#C8907A] hover:bg-[#B07A66] text-white h-7 px-2"
                             onClick={() => handleApproveJoinRequest(request.family_id)}
                           >
                             Approve
@@ -459,7 +459,7 @@ const GroupDetail = () => {
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F5F3EE] transition"
                   >
                     <Link to={`/family/${member.family_id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-[#5B9A8B]/10 flex items-center justify-center text-[#5B9A8B] font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-[#C8907A]/10 flex items-center justify-center text-[#C8907A] font-semibold">
                         {member.family_name?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">

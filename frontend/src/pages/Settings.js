@@ -150,15 +150,15 @@ const Settings = () => {
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="bg-white border border-[#E0E0E0]">
-            <TabsTrigger value="profile" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
+            <TabsTrigger value="profile" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="verification" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
+            <TabsTrigger value="verification" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
               <Shield className="w-4 h-4 mr-2" />
               Verification
             </TabsTrigger>
-            <TabsTrigger value="subscription" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
+            <TabsTrigger value="subscription" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
               <CreditCard className="w-4 h-4 mr-2" />
               Subscription
             </TabsTrigger>
@@ -322,7 +322,7 @@ const Settings = () => {
                         onClick={() => toggleInterest(interest)}
                         className={`px-3 py-1 rounded-full text-sm transition ${
                           formData.interests.includes(interest)
-                            ? 'bg-[#2A9D8F] text-white'
+                            ? 'bg-[#C8907A] text-white'
                             : 'bg-[#F4F1DE] text-[#264653]'
                         }`}
                       >
@@ -412,7 +412,7 @@ const Settings = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-[#264653]">Current Plan</p>
-                    <p className="text-2xl font-bold text-[#2A9D8F] font-fraunces">
+                    <p className="text-2xl font-bold text-[#C8907A] font-fraunces">
                       {user?.subscription_status === 'active' ? 'Active Member' : 'Free Trial'}
                     </p>
                   </div>
