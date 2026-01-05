@@ -40,7 +40,7 @@ const InstallPWA = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     // Show iOS prompt if on Safari
-    if (iOS && !standalone) {
+    if (isIOS && !isStandalone) {
       const hasSeenIOSPrompt = localStorage.getItem('pwa-ios-prompt-seen');
       if (!hasSeenIOSPrompt) {
         setTimeout(() => setShowPrompt(true), 3000);
@@ -50,7 +50,7 @@ const InstallPWA = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
-  }, []);
+  }, [isIOS, isStandalone]);
 
   const handleInstall = async () => {
     if (!installPrompt) return;
