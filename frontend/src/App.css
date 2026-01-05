@@ -9,7 +9,7 @@
   position: absolute;
   width: 600px;
   height: 600px;
-  background: linear-gradient(135deg, rgba(42, 157, 143, 0.1) 0%, rgba(233, 196, 106, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(91, 154, 139, 0.1) 0%, rgba(200, 144, 122, 0.15) 100%);
   border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
   animation: blob-morph 15s ease-in-out infinite;
   z-index: -1;
@@ -134,11 +134,13 @@
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid rgba(38, 70, 83, 0.1);
+  border-left: 3px solid #C8907A;
 }
 
 .family-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px rgba(38, 70, 83, 0.15);
+  border-left-color: #B07A66;
 }
 
 /* Badge styles */
@@ -261,8 +263,8 @@
 .interest-tag {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  background-color: rgba(91, 154, 139, 0.1);
-  color: #5B9A8B;
+  background-color: rgba(200, 144, 122, 0.15);
+  color: #9A7565;
   border-radius: 9999px;
   font-size: 0.875rem;
   margin: 0.25rem;
@@ -270,7 +272,7 @@
 }
 
 .interest-tag:hover {
-  background-color: rgba(91, 154, 139, 0.2);
+  background-color: rgba(200, 144, 122, 0.25);
 }
 
 /* Empty state */
