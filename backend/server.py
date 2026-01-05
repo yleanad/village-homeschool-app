@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends, Response
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends, Response, UploadFile, File
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,9 +13,13 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
+import base64
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
