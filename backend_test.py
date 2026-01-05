@@ -510,12 +510,21 @@ class VillageFriendsAPITester:
         self.test_create_family_profile()
         self.test_get_family_profile()
         
+        # New feature: Photo upload
+        self.test_photo_upload()
+        
         # Discovery tests
         self.test_nearby_families()
         
         # Event tests
         self.test_create_event()
         self.test_get_events()
+        
+        # Group management tests (new features)
+        self.test_groups_endpoints()
+        self.test_create_group_premium_required()
+        self.test_set_premium_and_create_group()
+        self.test_group_member_management()
         
         # Other feature tests
         self.test_subscription_plans()
