@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardLayout from '@/components/DashboardLayout';
+import NotificationSettings from '@/components/NotificationSettings';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
