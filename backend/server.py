@@ -37,6 +37,11 @@ JWT_EXPIRATION_DAYS = 7
 # Stripe Configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
 
+# VAPID Configuration for Push Notifications
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY')
+VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'support@villagefriends.app')
+
 # Subscription Plans
 SUBSCRIPTION_PLANS = {
     "monthly": {"price": 9.99, "name": "Monthly Membership", "duration_days": 30},
