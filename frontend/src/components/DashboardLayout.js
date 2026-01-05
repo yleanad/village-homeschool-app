@@ -43,7 +43,7 @@ const DashboardLayout = ({ children }) => {
           <Menu className="w-6 h-6" />
         </button>
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#C8907A] flex items-center justify-center">
             <Heart className="w-4 h-4 text-white" />
           </div>
           <span className="font-fraunces font-semibold text-[#264653]">Village Friends</span>
@@ -70,7 +70,7 @@ const DashboardLayout = ({ children }) => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8" data-testid="sidebar-logo">
-            <div className="w-10 h-10 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#C8907A] flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <span className="font-fraunces text-xl font-semibold text-[#264653]">Village Friends</span>
@@ -109,7 +109,7 @@ const DashboardLayout = ({ children }) => {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all ${
                   isActive(item.path)
-                    ? 'bg-[#5B9A8B] text-white'
+                    ? 'bg-[#C8907A] text-white'
                     : 'text-[#5F6F75] hover:bg-[#F5F3EE] hover:text-[#2C3E50]'
                 }`}
                 data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}

@@ -312,7 +312,7 @@ const Landing = () => {
               <ul className="space-y-3 mb-6">
                 {["Unlimited family connections", "Event creation & RSVP", "Direct messaging", "Map-based discovery", "Calendar integration"].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-[#5F6F75]">
-                    <Check className="w-4 h-4 text-[#5B9A8B]" />
+                    <Check className="w-4 h-4 text-[#C8907A]" />
                     {item}
                   </li>
                 ))}
@@ -340,7 +340,7 @@ const Landing = () => {
               <ul className="space-y-3 mb-6">
                 {["Everything in Monthly", "Co-op & Group Management", "Post announcements", "Group events", "Priority support"].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-[#5F6F75]">
-                    <Check className="w-4 h-4 text-[#5B9A8B]" />
+                    <Check className="w-4 h-4 text-[#C8907A]" />
                     {item}
                   </li>
                 ))}
