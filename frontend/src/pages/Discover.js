@@ -239,7 +239,7 @@ const Discover = () => {
                   {/* Age Range Filter */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-[#2C3E50] font-medium">Children's Age Range</Label>
+                      <Label className="text-[#2C3E50] font-medium">Kids&apos; Age Range</Label>
                       <span className="text-sm text-[#C8907A] font-medium">
                         {ageRange[0]} - {ageRange[1]} years
                       </span>
