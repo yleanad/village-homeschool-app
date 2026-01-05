@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, MapPin, Calendar, Crown, Bell, Plus, LogOut, Settings } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Calendar, Crown, Bell, Plus, LogOut, Settings, Shield, UserMinus, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -24,10 +26,20 @@ const GroupDetail = () => {
   const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [announcementData, setAnnouncementData] = useState({ title: '', content: '', pinned: false });
   const [posting, setPosting] = useState(false);
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [showJoinRequests, setShowJoinRequests] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [selectedNewOwner, setSelectedNewOwner] = useState('');
 
   useEffect(() => {
     fetchGroup();
   }, [groupId]);
+
+  useEffect(() => {
+    if (group && (isOwner || isAdmin)) {
+      fetchJoinRequests();
+    }
+  }, [group]);
 
   const fetchGroup = async () => {
     try {
@@ -44,9 +56,21 @@ const GroupDetail = () => {
     }
   };
 
+  const fetchJoinRequests = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/groups/${groupId}/join-requests`, {
+        withCredentials: true
+      });
+      setJoinRequests(response.data);
+    } catch (error) {
+      // Silently fail - user might not have permission
+    }
+  };
+
   const isOwner = group?.owner_family_id === familyProfile?.family_id;
   const isMember = group?.members?.some(m => m.family_id === familyProfile?.family_id);
   const memberRole = group?.members?.find(m => m.family_id === familyProfile?.family_id)?.role;
+  const isAdmin = memberRole === 'admin' || memberRole === 'owner';
 
   const handleLeaveGroup = async () => {
     if (!window.confirm('Are you sure you want to leave this group?')) return;
