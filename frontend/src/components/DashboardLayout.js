@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Heart, Home, MapPin, Calendar, MessageCircle, Users, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Heart, Home, MapPin, Calendar, MessageCircle, Users, Settings, LogOut, Menu, X, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
@@ -11,10 +11,13 @@ const DashboardLayout = ({ children }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const isPremium = user?.subscription_status === 'active';
+
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/discover', icon: MapPin, label: 'Discover' },
     { path: '/events', icon: Calendar, label: 'Events' },
+    { path: '/groups', icon: Users, label: 'Groups', premium: true },
     { path: '/calendar', icon: Calendar, label: 'My Calendar' },
     { path: '/messages', icon: MessageCircle, label: 'Messages' },
     { path: '/profile', icon: Users, label: 'My Profile' },
@@ -104,15 +107,20 @@ const DashboardLayout = ({ children }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all ${
                   isActive(item.path)
-                    ? 'bg-[#2A9D8F] text-white'
-                    : 'text-[#5F6F75] hover:bg-[#F4F1DE] hover:text-[#264653]'
+                    ? 'bg-[#5B9A8B] text-white'
+                    : 'text-[#5F6F75] hover:bg-[#F5F3EE] hover:text-[#2C3E50]'
                 }`}
                 data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </div>
+                {item.premium && !isPremium && (
+                  <Crown className="w-4 h-4 text-[#D4B896]" />
+                )}
               </Link>
             ))}
           </nav>
