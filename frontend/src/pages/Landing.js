@@ -130,7 +130,7 @@ const Landing = () => {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1763738173696-3354654fa8fe?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
+                  src="https://images.pexels.com/photos/8813502/pexels-photo-8813502.jpeg?auto=compress&cs=tinysrgb&w=800"
                   alt="Kids playing together"
                   className="w-full h-[400px] lg:h-[500px] object-cover"
                 />
