@@ -1215,6 +1215,18 @@ async def respond_meetup_request(request_id: str, status: str, user: dict = Depe
         
         await db.events.insert_one(event_doc)
     
+    # Send push notification to the requester
+    requester_profile = await db.family_profiles.find_one(
+        {"family_id": request_doc["requester_family_id"]},
+        {"user_id": 1}
+    )
+    if requester_profile:
+        await notify_meetup_request(
+            requester_family_name=my_profile["family_name"],
+            target_user_id=requester_profile["user_id"],
+            status=status
+        )
+    
     return {"message": f"Request {status}"}
 
 # ============ CO-OP / GROUP ENDPOINTS (PREMIUM) ============
