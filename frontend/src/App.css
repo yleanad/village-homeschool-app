@@ -25,7 +25,7 @@
 /* Navigation */
 .nav-link {
   position: relative;
-  color: #264653;
+  color: #2C3E50;
   font-weight: 500;
   transition: color 0.2s ease;
 }
@@ -37,7 +37,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background-color: #2A9D8F;
+  background-color: #5B9A8B;
   transition: width 0.2s ease;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .chat-message.sent {
-  background-color: #2A9D8F;
+  background-color: #5B9A8B;
   color: white;
   margin-left: auto;
   border-bottom-right-radius: 0.25rem;
@@ -90,7 +90,7 @@
 
 .chat-message.received {
   background-color: white;
-  color: #264653;
+  color: #2C3E50;
   border: 1px solid #E0E0E0;
   border-bottom-left-radius: 0.25rem;
 }
@@ -110,21 +110,21 @@
 }
 
 .calendar-event.meetup {
-  background-color: rgba(42, 157, 143, 0.2);
-  color: #2A9D8F;
-  border-left: 3px solid #2A9D8F;
+  background-color: rgba(91, 154, 139, 0.2);
+  color: #5B9A8B;
+  border-left: 3px solid #5B9A8B;
 }
 
 .calendar-event.playdate {
-  background-color: rgba(231, 111, 81, 0.2);
-  color: #E76F51;
-  border-left: 3px solid #E76F51;
+  background-color: rgba(200, 144, 122, 0.2);
+  color: #C8907A;
+  border-left: 3px solid #C8907A;
 }
 
 .calendar-event.field_trip {
-  background-color: rgba(233, 196, 106, 0.2);
-  color: #E9C46A;
-  border-left: 3px solid #E9C46A;
+  background-color: rgba(212, 184, 150, 0.3);
+  color: #9A8565;
+  border-left: 3px solid #D4B896;
 }
 
 /* Family card */
@@ -147,8 +147,8 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
-  background-color: rgba(42, 157, 143, 0.15);
-  color: #2A9D8F;
+  background-color: rgba(91, 154, 139, 0.15);
+  color: #5B9A8B;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -159,8 +159,20 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
-  background-color: rgba(233, 196, 106, 0.3);
-  color: #b8860b;
+  background-color: rgba(212, 184, 150, 0.3);
+  color: #8B7355;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, rgba(212, 184, 150, 0.4), rgba(200, 144, 122, 0.3));
+  color: #8B7355;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -170,8 +182,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(42, 157, 143, 0.2);
-  border-top-color: #2A9D8F;
+  border: 3px solid rgba(91, 154, 139, 0.2);
+  border-top-color: #5B9A8B;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -227,7 +239,7 @@
 }
 
 .pricing-card.featured {
-  border-color: #2A9D8F;
+  border-color: #5B9A8B;
   position: relative;
 }
 
@@ -237,7 +249,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #2A9D8F;
+  background: #5B9A8B;
   color: white;
   padding: 0.25rem 1rem;
   border-radius: 9999px;
@@ -249,8 +261,8 @@
 .interest-tag {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  background-color: rgba(42, 157, 143, 0.1);
-  color: #2A9D8F;
+  background-color: rgba(91, 154, 139, 0.1);
+  color: #5B9A8B;
   border-radius: 9999px;
   font-size: 0.875rem;
   margin: 0.25rem;
@@ -258,7 +270,7 @@
 }
 
 .interest-tag:hover {
-  background-color: rgba(42, 157, 143, 0.2);
+  background-color: rgba(91, 154, 139, 0.2);
 }
 
 /* Empty state */
