@@ -144,21 +144,21 @@ const Settings = () => {
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto" data-testid="settings-page">
-        <h1 className="font-fraunces text-2xl sm:text-3xl font-bold text-[#264653] mb-6">
+        <h1 className="font-fraunces text-2xl sm:text-3xl font-bold text-[#2C3E50] mb-6">
           Settings
         </h1>
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="bg-white border border-[#E0E0E0]">
-            <TabsTrigger value="profile" className="data-[state=active]:bg-[#2A9D8F] data-[state=active]:text-white">
+            <TabsTrigger value="profile" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="verification" className="data-[state=active]:bg-[#2A9D8F] data-[state=active]:text-white">
+            <TabsTrigger value="verification" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
               <Shield className="w-4 h-4 mr-2" />
               Verification
             </TabsTrigger>
-            <TabsTrigger value="subscription" className="data-[state=active]:bg-[#2A9D8F] data-[state=active]:text-white">
+            <TabsTrigger value="subscription" className="data-[state=active]:bg-[#5B9A8B] data-[state=active]:text-white">
               <CreditCard className="w-4 h-4 mr-2" />
               Subscription
             </TabsTrigger>
