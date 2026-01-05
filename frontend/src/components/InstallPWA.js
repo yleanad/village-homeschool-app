@@ -6,18 +6,20 @@ import { Button } from '@/components/ui/button';
 const InstallPWA = () => {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  
+  // Check if already installed (standalone mode)
+  const isStandalone = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches || 
+    window.navigator.standalone === true
+  );
+  
+  // Check if iOS
+  const isIOS = typeof navigator !== 'undefined' && 
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   useEffect(() => {
-    // Check if already installed (standalone mode)
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
-                       window.navigator.standalone === true;
-    setIsStandalone(standalone);
-
-    // Check if iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(iOS);
+    // Don't run if already installed
+    if (isStandalone) return;
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstall = (e) => {
