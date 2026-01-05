@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import "@/App.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,8 +24,26 @@ import Onboarding from "@/pages/Onboarding";
 import Groups from "@/pages/Groups";
 import GroupDetail from "@/pages/GroupDetail";
 
+// Components
+import InstallPWA from "@/components/InstallPWA";
+import MobileNav from "@/components/MobileNav";
+
 // Context
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+
+// Register Service Worker
+const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js', {
+        scope: '/'
+      });
+      console.log('Service Worker registered:', registration.scope);
+    } catch (error) {
+      console.error('Service Worker registration failed:', error);
+    }
+  }
+};
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -58,37 +76,49 @@ function AppRouter() {
   }
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/pricing" element={<Pricing />} />
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/pricing" element={<Pricing />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+        <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+        <Route path="/events/create" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
+        <Route path="/events/:eventId" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/messages/:familyId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+        <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+        <Route path="/groups/:groupId" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/family/:familyId" element={<ProtectedRoute><FamilyProfile /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
+        
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       
-      {/* Protected Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
-      <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-      <Route path="/events/create" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
-      <Route path="/events/:eventId" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/messages/:familyId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-      <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
-      <Route path="/groups/:groupId" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/family/:familyId" element={<ProtectedRoute><FamilyProfile /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-      <Route path="/subscription/success" element={<ProtectedRoute><SubscriptionSuccess /></ProtectedRoute>} />
+      {/* Mobile Navigation */}
+      <MobileNav />
       
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      {/* PWA Install Prompt */}
+      <InstallPWA />
+    </>
   );
 }
 
 function App() {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
