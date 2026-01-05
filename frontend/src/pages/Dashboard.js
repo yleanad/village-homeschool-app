@@ -28,9 +28,12 @@ const Dashboard = () => {
         axios.get(`${API_URL}/api/meetup-requests`, { withCredentials: true })
       ]);
       
-      setNearbyFamilies(familiesRes.data.slice(0, 4));
-      setUpcomingEvents([...eventsRes.data.hosted, ...eventsRes.data.attending].slice(0, 3));
-      setMeetupRequests(requestsRes.data.incoming.filter(r => r.status === 'pending'));
+      setNearbyFamilies(Array.isArray(familiesRes.data) ? familiesRes.data.slice(0, 4) : []);
+      const hosted = eventsRes.data?.hosted || [];
+      const attending = eventsRes.data?.attending || [];
+      setUpcomingEvents([...hosted, ...attending].slice(0, 3));
+      const incoming = requestsRes.data?.incoming || [];
+      setMeetupRequests(incoming.filter(r => r.status === 'pending'));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
