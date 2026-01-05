@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import uuid
 
 class VillageFriendsAPITester:
-    def __init__(self, base_url="https://local-scholar-meet.preview.emergentagent.com"):
+    def __init__(self, base_url="https://village-friends.preview.emergentagent.com"):
         self.base_url = base_url
         self.session = requests.Session()
         self.user_token = None
