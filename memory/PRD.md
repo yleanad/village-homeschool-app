@@ -142,6 +142,17 @@ Build an app where homeschool parents can find other homeschool families in the 
 - Clear all filters option
 - Backend API updated: `/api/families/nearby` now accepts `min_age`, `max_age`, `interests` params
 
+### January 2025 - PWA Mobile App
+- Converted React app to Progressive Web App (PWA)
+- Created manifest.json with app metadata and shortcuts
+- Implemented service worker for offline support and caching
+- Generated app icons for all required sizes (72-512px)
+- Added mobile-optimized bottom navigation bar
+- Created InstallPWA component with iOS and Android install prompts
+- Added PWA meta tags for iOS (apple-mobile-web-app-capable, apple-touch-icon)
+- Implemented mobile-specific CSS (safe areas, touch targets, no-zoom inputs)
+- App can now be installed on mobile home screens
+
 ---
 
 ## Prioritized Backlog
@@ -165,6 +176,7 @@ Build an app where homeschool parents can find other homeschool families in the 
 - [x] Group member roles (admin delegation)
 - [x] Enhanced coral accent color throughout UI
 - [x] Advanced search filters for family discovery (age ranges, interests)
+- [x] PWA mobile app (installable on iOS/Android home screens)
 
 ### P2 (High Priority) - Future
 - [ ] Real-time messaging (WebSocket)
