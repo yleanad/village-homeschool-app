@@ -153,6 +153,19 @@ Build an app where homeschool parents can find other homeschool families in the 
 - Implemented mobile-specific CSS (safe areas, touch targets, no-zoom inputs)
 - App can now be installed on mobile home screens
 
+### January 2025 - Push Notifications
+- Implemented Web Push notifications using pywebpush
+- Added VAPID key generation and configuration
+- Created notification endpoints: subscribe, unsubscribe, preferences, test
+- Push notifications triggered for:
+  - New messages from other families
+  - New events near you
+  - Meetup requests (new, accepted, declined)
+  - Group updates and announcements
+- Added NotificationSettings component in Settings page
+- Users can enable/disable push and customize notification types
+- Service worker handles push events and notification clicks
+
 ---
 
 ## Prioritized Backlog
@@ -177,10 +190,10 @@ Build an app where homeschool parents can find other homeschool families in the 
 - [x] Enhanced coral accent color throughout UI
 - [x] Advanced search filters for family discovery (age ranges, interests)
 - [x] PWA mobile app (installable on iOS/Android home screens)
+- [x] Push notifications for events, messages, and meetup requests
 
 ### P2 (High Priority) - Future
 - [ ] Real-time messaging (WebSocket)
-- [ ] Push notifications for new messages/events
 - [ ] Email notifications for meetup requests
 
 ### P2 (Medium Priority) - Future
