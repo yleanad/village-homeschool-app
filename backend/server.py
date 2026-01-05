@@ -855,7 +855,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     if not my_profile:
         return []
     
-    # Get all unique conversation partners
+    # Get all messages for this user
     messages = await db.messages.find(
         {"$or": [
             {"sender_family_id": my_profile["family_id"]},
@@ -864,21 +864,44 @@ async def get_conversations(user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(500)
     
-    conversations = {}
+    # First pass: collect unique family IDs and latest messages
+    conversation_data = {}
     for msg in messages:
         other_family_id = msg["recipient_family_id"] if msg["sender_family_id"] == my_profile["family_id"] else msg["sender_family_id"]
-        if other_family_id not in conversations:
-            other_family = await db.family_profiles.find_one({"family_id": other_family_id}, {"_id": 0})
-            conversations[other_family_id] = {
-                "family_id": other_family_id,
-                "family_name": other_family["family_name"] if other_family else "Unknown",
-                "profile_picture": other_family.get("profile_picture") if other_family else None,
+        if other_family_id not in conversation_data:
+            conversation_data[other_family_id] = {
                 "last_message": msg["content"],
                 "last_message_date": msg["created_at"],
                 "unread": not msg["read"] and msg["recipient_family_id"] == my_profile["family_id"]
             }
     
-    return list(conversations.values())
+    # Batch fetch all family profiles in one query (fix N+1)
+    family_ids = list(conversation_data.keys())
+    if not family_ids:
+        return []
+    
+    family_profiles = await db.family_profiles.find(
+        {"family_id": {"$in": family_ids}},
+        {"_id": 0, "family_id": 1, "family_name": 1, "profile_picture": 1}
+    ).to_list(len(family_ids))
+    
+    # Create lookup dict
+    profiles_lookup = {f["family_id"]: f for f in family_profiles}
+    
+    # Build final conversations list
+    conversations = []
+    for family_id, data in conversation_data.items():
+        profile = profiles_lookup.get(family_id, {})
+        conversations.append({
+            "family_id": family_id,
+            "family_name": profile.get("family_name", "Unknown"),
+            "profile_picture": profile.get("profile_picture"),
+            "last_message": data["last_message"],
+            "last_message_date": data["last_message_date"],
+            "unread": data["unread"]
+        })
+    
+    return conversations
 
 @api_router.get("/messages/{family_id}")
 async def get_conversation(family_id: str, user: dict = Depends(get_current_user)):
