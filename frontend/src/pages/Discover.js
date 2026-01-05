@@ -206,12 +206,138 @@ const Discover = () => {
                 <SelectItem value="100">Within 100 miles</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`h-11 ${filtersApplied ? 'border-[#C8907A] text-[#C8907A]' : ''}`}
+              data-testid="filter-toggle-btn"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+              {filtersApplied && (
+                <span className="ml-1 w-2 h-2 rounded-full bg-[#C8907A]" />
+              )}
+              {showFilters ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
+            </Button>
             <Button onClick={handleSearch} className="btn-coral h-11" data-testid="search-btn">
               <Search className="w-4 h-4 mr-2" />
               Search
             </Button>
           </div>
+
+          {/* Advanced Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-4 mt-4 border-t border-[#E0E0E0] space-y-6">
+                  {/* Age Range Filter */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-[#2C3E50] font-medium">Children's Age Range</Label>
+                      <span className="text-sm text-[#C8907A] font-medium">
+                        {ageRange[0]} - {ageRange[1]} years
+                      </span>
+                    </div>
+                    <div className="px-2">
+                      <Slider
+                        value={ageRange}
+                        onValueChange={setAgeRange}
+                        min={0}
+                        max={18}
+                        step={1}
+                        className="w-full"
+                        data-testid="age-range-slider"
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-[#5F6F75] mt-1 px-2">
+                      <span>0 years</span>
+                      <span>18 years</span>
+                    </div>
+                  </div>
+
+                  {/* Interests Filter */}
+                  <div>
+                    <Label className="text-[#2C3E50] font-medium mb-3 block">Interests</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {INTERESTS.map((interest) => (
+                        <button
+                          key={interest}
+                          onClick={() => toggleInterest(interest)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            selectedInterests.includes(interest)
+                              ? 'bg-[#C8907A] text-white shadow-sm'
+                              : 'bg-[#F5F3EE] text-[#2C3E50] hover:bg-[#E0E0E0]'
+                          }`}
+                          data-testid={`interest-${interest.toLowerCase().replace(/[^a-z]/g, '-')}`}
+                        >
+                          {interest}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filter Actions */}
+                  <div className="flex items-center justify-between pt-2">
+                    <Button
+                      variant="ghost"
+                      onClick={clearFilters}
+                      className="text-[#5F6F75] hover:text-[#2C3E50]"
+                      data-testid="clear-filters-btn"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Clear Filters
+                    </Button>
+                    <Button
+                      onClick={applyFilters}
+                      className="btn-coral"
+                      data-testid="apply-filters-btn"
+                    >
+                      Apply Filters
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Active Filters Display */}
+        {filtersApplied && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-[#5F6F75]">Active filters:</span>
+            {(ageRange[0] > 0 || ageRange[1] < 18) && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#C8907A]/15 text-[#C8907A] rounded-full text-sm">
+                Ages {ageRange[0]}-{ageRange[1]}
+                <button onClick={() => setAgeRange([0, 18])} className="hover:text-[#B07A66]">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {selectedInterests.map((interest) => (
+              <span
+                key={interest}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-[#C8907A]/15 text-[#C8907A] rounded-full text-sm"
+              >
+                {interest}
+                <button onClick={() => toggleInterest(interest)} className="hover:text-[#B07A66]">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={() => { clearFilters(); fetchFamilies(); }}
+              className="text-sm text-[#5F6F75] hover:text-[#2C3E50] underline"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         {/* Results */}
         {loading ? (
