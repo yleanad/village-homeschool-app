@@ -239,7 +239,7 @@ const Groups = () => {
                           onClick={() => toggleFocusArea(area)}
                           className={`px-3 py-1 rounded-full text-sm transition ${
                             formData.focus_areas.includes(area)
-                              ? 'bg-[#5B9A8B] text-white'
+                              ? 'bg-[#C8907A] text-white'
                               : 'bg-[#F5F3EE] text-[#2C3E50]'
                           }`}
                         >
@@ -409,7 +409,7 @@ const Groups = () => {
                     ) : (
                       <Unlock className="w-4 h-4 text-[#5B9A8B]" />
                     )}
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#5B9A8B]/10 text-[#5B9A8B]">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#C8907A]/15 text-[#C8907A]">
                       {group.group_type.replace('_', ' ')}
                     </span>
                   </div>
@@ -444,7 +444,7 @@ const Groups = () => {
                   ) : (
                     <Button
                       size="sm"
-                      className="bg-[#5B9A8B] hover:bg-[#4A8275] text-white"
+                      className="bg-[#C8907A] hover:bg-[#B07A66] text-white"
                       onClick={() => handleJoinGroup(group.group_id)}
                     >
                       Join
