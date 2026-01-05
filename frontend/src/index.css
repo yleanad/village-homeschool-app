@@ -5,35 +5,35 @@
 @tailwind utilities;
 
 :root {
-  /* Village Friends Brand Colors */
-  --village-teal: #2A9D8F;
-  --village-teal-dark: #21867a;
-  --forest-canopy: #264653;
-  --coral-bloom: #E76F51;
-  --coral-bloom-dark: #d55a3e;
-  --warm-sand: #F4F1DE;
-  --golden-hour: #E9C46A;
+  /* Village Friends Brand Colors - Muted Earthy Tones */
+  --village-teal: #5B9A8B;
+  --village-teal-dark: #4A8275;
+  --forest-canopy: #2C3E50;
+  --coral-bloom: #C8907A;
+  --coral-bloom-dark: #B07A66;
+  --warm-sand: #F5F3EE;
+  --golden-hour: #D4B896;
   
-  /* Semantic Colors */
-  --background: 47 33% 95%;
-  --foreground: 195 34% 24%;
+  /* Semantic Colors - Muted Palette */
+  --background: 40 20% 95%;
+  --foreground: 210 29% 24%;
   --card: 0 0% 100%;
-  --card-foreground: 195 34% 24%;
+  --card-foreground: 210 29% 24%;
   --popover: 0 0% 100%;
-  --popover-foreground: 195 34% 24%;
-  --primary: 170 56% 39%;
+  --popover-foreground: 210 29% 24%;
+  --primary: 160 26% 48%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 47 33% 95%;
-  --secondary-foreground: 195 34% 24%;
-  --muted: 47 20% 90%;
-  --muted-foreground: 195 15% 45%;
-  --accent: 16 76% 61%;
+  --secondary: 40 20% 95%;
+  --secondary-foreground: 210 29% 24%;
+  --muted: 40 15% 90%;
+  --muted-foreground: 210 12% 45%;
+  --accent: 16 35% 63%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 16 76% 61%;
+  --destructive: 16 35% 63%;
   --destructive-foreground: 0 0% 100%;
-  --border: 195 10% 85%;
-  --input: 195 10% 85%;
-  --ring: 170 56% 39%;
+  --border: 210 10% 85%;
+  --input: 210 10% 85%;
+  --ring: 160 26% 48%;
   --radius: 0.75rem;
 }
 
