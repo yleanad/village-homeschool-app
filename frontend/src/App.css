@@ -1,34 +1,276 @@
-.App-logo {
-    height: 40vmin;
+/* Village Friends App Styles */
+
+.App {
+  min-height: 100vh;
+}
+
+/* Hero section organic shape */
+.hero-blob {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.1) 0%, rgba(233, 196, 106, 0.1) 100%);
+  border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  animation: blob-morph 15s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes blob-morph {
+  0%, 100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; }
+  25% { border-radius: 58% 42% 30% 70% / 55% 45% 55% 45%; }
+  50% { border-radius: 70% 30% 42% 58% / 45% 55% 45% 55%; }
+  75% { border-radius: 30% 70% 58% 42% / 55% 45% 55% 45%; }
+}
+
+/* Navigation */
+.nav-link {
+  position: relative;
+  color: #264653;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #2A9D8F;
+  transition: width 0.2s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* Feature cards grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Map container */
+.map-container {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(38, 70, 83, 0.1);
+}
+
+/* Chat interface */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  min-height: 400px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.chat-message {
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.chat-message.sent {
+  background-color: #2A9D8F;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.received {
+  background-color: white;
+  color: #264653;
+  border: 1px solid #E0E0E0;
+  border-bottom-left-radius: 0.25rem;
+}
+
+/* Calendar styles */
+.calendar-event {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-event:hover {
+  transform: scale(1.02);
+}
+
+.calendar-event.meetup {
+  background-color: rgba(42, 157, 143, 0.2);
+  color: #2A9D8F;
+  border-left: 3px solid #2A9D8F;
+}
+
+.calendar-event.playdate {
+  background-color: rgba(231, 111, 81, 0.2);
+  color: #E76F51;
+  border-left: 3px solid #E76F51;
+}
+
+.calendar-event.field_trip {
+  background-color: rgba(233, 196, 106, 0.2);
+  color: #E9C46A;
+  border-left: 3px solid #E9C46A;
+}
+
+/* Family card */
+.family-card {
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(38, 70, 83, 0.1);
+}
+
+.family-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(38, 70, 83, 0.15);
+}
+
+/* Badge styles */
+.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(42, 157, 143, 0.15);
+  color: #2A9D8F;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-trial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(233, 196, 106, 0.3);
+  color: #b8860b;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(42, 157, 143, 0.2);
+  border-top-color: #2A9D8F;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 50;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    opacity: 0;
     pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Pricing card */
+.pricing-card {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(38, 70, 83, 0.15);
 }
 
-.App-link {
-    color: #61dafb;
+.pricing-card.featured {
+  border-color: #2A9D8F;
+  position: relative;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.pricing-card.featured::before {
+  content: 'Best Value';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2A9D8F;
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Interest tag */
+.interest-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(42, 157, 143, 0.1);
+  color: #2A9D8F;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  margin: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.interest-tag:hover {
+  background-color: rgba(42, 157, 143, 0.2);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #5F6F75;
+}
+
+.empty-state svg {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
 }
