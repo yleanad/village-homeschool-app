@@ -86,7 +86,7 @@ const Register = () => {
           className="w-full max-w-md"
         >
           <Link to="/" className="flex items-center gap-2 mb-8" data-testid="logo">
-            <div className="w-10 h-10 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#C8907A] flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <span className="font-fraunces text-xl font-semibold text-[#264653]">Village Friends</span>
@@ -184,11 +184,11 @@ const Register = () => {
               )}
             </div>
 
-            <div className="bg-[#2A9D8F]/10 rounded-lg p-4 space-y-2">
+            <div className="bg-[#C8907A]/15 rounded-lg p-4 space-y-2">
               <p className="text-sm font-medium text-[#264653]">Your free trial includes:</p>
               {["14 days of full access", "Connect with unlimited families", "Create and join events", "Direct messaging"].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-[#5F6F75]">
-                  <Check className="w-4 h-4 text-[#2A9D8F]" />
+                  <Check className="w-4 h-4 text-[#C8907A]" />
                   {item}
                 </div>
               ))}
@@ -210,7 +210,7 @@ const Register = () => {
 
           <p className="mt-6 text-center text-[#5F6F75]">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#2A9D8F] font-semibold hover:underline" data-testid="login-link">
+            <Link to="/login" className="text-[#C8907A] font-semibold hover:underline" data-testid="login-link">
               Sign in
             </Link>
           </p>

@@ -47,7 +47,7 @@ const Login = () => {
           className="w-full max-w-md"
         >
           <Link to="/" className="flex items-center gap-2 mb-8" data-testid="logo">
-            <div className="w-10 h-10 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#C8907A] flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <span className="font-fraunces text-xl font-semibold text-[#264653]">Village Friends</span>
@@ -139,7 +139,7 @@ const Login = () => {
 
           <p className="mt-6 text-center text-[#5F6F75]">
             Don't have an account?{' '}
-            <Link to="/register" className="text-[#2A9D8F] font-semibold hover:underline" data-testid="register-link">
+            <Link to="/register" className="text-[#C8907A] font-semibold hover:underline" data-testid="register-link">
               Sign up
             </Link>
           </p>
