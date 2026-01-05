@@ -1831,6 +1831,86 @@ async def get_calendar_events(
     
     return events
 
+# ============ PUSH NOTIFICATION ENDPOINTS ============
+
+@api_router.get("/notifications/vapid-key")
+async def get_vapid_public_key():
+    """Get the VAPID public key for push subscription"""
+    if not VAPID_PUBLIC_KEY:
+        raise HTTPException(status_code=500, detail="Push notifications not configured")
+    return {"publicKey": VAPID_PUBLIC_KEY}
+
+@api_router.post("/notifications/subscribe")
+async def subscribe_to_push(subscription: PushSubscription, user: dict = Depends(get_current_user)):
+    """Subscribe to push notifications"""
+    # Check if subscription already exists
+    existing = await db.push_subscriptions.find_one({
+        "user_id": user["user_id"],
+        "endpoint": subscription.endpoint
+    })
+    
+    if existing:
+        return {"status": "already_subscribed"}
+    
+    # Store subscription
+    await db.push_subscriptions.insert_one({
+        "user_id": user["user_id"],
+        "endpoint": subscription.endpoint,
+        "keys": subscription.keys,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"status": "subscribed"}
+
+@api_router.delete("/notifications/unsubscribe")
+async def unsubscribe_from_push(subscription: PushSubscription, user: dict = Depends(get_current_user)):
+    """Unsubscribe from push notifications"""
+    result = await db.push_subscriptions.delete_one({
+        "user_id": user["user_id"],
+        "endpoint": subscription.endpoint
+    })
+    
+    return {"status": "unsubscribed", "deleted": result.deleted_count > 0}
+
+@api_router.get("/notifications/preferences")
+async def get_notification_preferences(user: dict = Depends(get_current_user)):
+    """Get user's notification preferences"""
+    prefs = user.get("notification_preferences", {
+        "messages": True,
+        "events": True,
+        "meetup_requests": True,
+        "group_updates": True
+    })
+    
+    # Check if user has any push subscriptions
+    sub_count = await db.push_subscriptions.count_documents({"user_id": user["user_id"]})
+    
+    return {
+        "preferences": prefs,
+        "push_enabled": sub_count > 0
+    }
+
+@api_router.put("/notifications/preferences")
+async def update_notification_preferences(prefs: NotificationPreferences, user: dict = Depends(get_current_user)):
+    """Update user's notification preferences"""
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"notification_preferences": prefs.dict()}}
+    )
+    
+    return {"status": "updated", "preferences": prefs.dict()}
+
+@api_router.post("/notifications/test")
+async def send_test_notification(user: dict = Depends(get_current_user)):
+    """Send a test push notification"""
+    await send_push_notification(
+        user_id=user["user_id"],
+        title="Test Notification",
+        body="Push notifications are working! 🎉",
+        url="/settings"
+    )
+    return {"status": "sent"}
+
 # ============ ROOT ENDPOINT ============
 
 @api_router.get("/")
