@@ -1,15 +1,18 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends, Response
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, EmailStr
+from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import bcrypt
+import jwt
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,70 +22,1086 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# JWT Configuration
+JWT_SECRET = os.environ.get('JWT_SECRET_KEY', 'village_friends_secret')
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_DAYS = 7
 
-# Create a router with the /api prefix
+# Stripe Configuration
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+
+# Subscription Plans
+SUBSCRIPTION_PLANS = {
+    "monthly": {"price": 9.99, "name": "Monthly Membership", "duration_days": 30},
+    "annual": {"price": 89.99, "name": "Annual Membership", "duration_days": 365}
+}
+
+FREE_TRIAL_DAYS = 14
+
+app = FastAPI(title="Village Friends API")
 api_router = APIRouter(prefix="/api")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+# ============ MODELS ============
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    email_verified: bool = False
+    id_verified: bool = False
+    subscription_status: str = "trial"
+    trial_ends_at: Optional[str] = None
+    subscription_ends_at: Optional[str] = None
+    created_at: str
+
+class FamilyProfileCreate(BaseModel):
+    family_name: str
+    bio: Optional[str] = None
+    city: str
+    state: str
+    zip_code: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    interests: List[str] = []
+    kids: List[Dict[str, Any]] = []  # [{name, age, interests}]
+    search_radius: int = 25  # miles
+    profile_picture: Optional[str] = None
+
+class FamilyProfileResponse(BaseModel):
+    family_id: str
+    user_id: str
+    family_name: str
+    bio: Optional[str] = None
+    city: str
+    state: str
+    zip_code: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    interests: List[str] = []
+    kids: List[Dict[str, Any]] = []
+    search_radius: int = 25
+    profile_picture: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+class EventCreate(BaseModel):
+    title: str
+    description: str
+    event_date: str
+    event_time: str
+    location: str
+    city: str
+    state: str
+    zip_code: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    max_attendees: Optional[int] = None
+    age_range: Optional[str] = None
+    event_type: str = "meetup"  # meetup, playdate, field_trip, etc.
+
+class EventResponse(BaseModel):
+    event_id: str
+    host_family_id: str
+    host_family_name: str
+    title: str
+    description: str
+    event_date: str
+    event_time: str
+    location: str
+    city: str
+    state: str
+    zip_code: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    max_attendees: Optional[int] = None
+    age_range: Optional[str] = None
+    event_type: str
+    attendees: List[Dict[str, Any]] = []
+    status: str = "upcoming"
+    created_at: str
+
+class MessageCreate(BaseModel):
+    recipient_family_id: str
+    content: str
+
+class MessageResponse(BaseModel):
+    message_id: str
+    sender_family_id: str
+    sender_family_name: str
+    recipient_family_id: str
+    content: str
+    read: bool = False
+    created_at: str
+
+class MeetupRequestCreate(BaseModel):
+    target_family_id: str
+    proposed_date: str
+    proposed_time: str
+    location: str
+    message: Optional[str] = None
+
+class MeetupRequestResponse(BaseModel):
+    request_id: str
+    requester_family_id: str
+    requester_family_name: str
+    target_family_id: str
+    proposed_date: str
+    proposed_time: str
+    location: str
+    message: Optional[str] = None
+    status: str = "pending"  # pending, accepted, declined
+    created_at: str
+
+# ============ HELPER FUNCTIONS ============
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_jwt_token(user_id: str, email: str) -> str:
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRATION_DAYS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_jwt_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(request: Request) -> dict:
+    # Check cookie first
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        session = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+        if session:
+            expires_at = session.get("expires_at")
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at > datetime.now(timezone.utc):
+                user = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
+                if user:
+                    return user
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # Check Authorization header
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        payload = decode_jwt_token(token)
+        user = await db.users.find_one({"user_id": payload["user_id"]}, {"_id": 0})
+        if user:
+            return user
+    
+    raise HTTPException(status_code=401, detail="Not authenticated")
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate distance between two points in miles using Haversine formula"""
+    from math import radians, sin, cos, sqrt, atan2
+    R = 3959  # Earth's radius in miles
+    
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    
+    return R * c
 
-# Add your routes to the router instead of directly to app
+# ============ AUTH ENDPOINTS ============
+
+@api_router.post("/auth/register")
+async def register(user_data: UserRegister):
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc)
+    trial_ends = now + timedelta(days=FREE_TRIAL_DAYS)
+    
+    user_doc = {
+        "user_id": user_id,
+        "email": user_data.email,
+        "name": user_data.name,
+        "password_hash": hash_password(user_data.password),
+        "picture": None,
+        "email_verified": False,
+        "id_verified": False,
+        "subscription_status": "trial",
+        "trial_ends_at": trial_ends.isoformat(),
+        "subscription_ends_at": None,
+        "created_at": now.isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    token = create_jwt_token(user_id, user_data.email)
+    
+    return {
+        "token": token,
+        "user": {
+            "user_id": user_id,
+            "email": user_data.email,
+            "name": user_data.name,
+            "email_verified": False,
+            "id_verified": False,
+            "subscription_status": "trial",
+            "trial_ends_at": trial_ends.isoformat()
+        }
+    }
+
+@api_router.post("/auth/login")
+async def login(user_data: UserLogin, response: Response):
+    user = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if not verify_password(user_data.password, user.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_jwt_token(user["user_id"], user["email"])
+    
+    # Create session
+    session_token = f"session_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRATION_DAYS)
+    
+    await db.user_sessions.insert_one({
+        "user_id": user["user_id"],
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=JWT_EXPIRATION_DAYS * 24 * 60 * 60
+    )
+    
+    return {
+        "token": token,
+        "user": {
+            "user_id": user["user_id"],
+            "email": user["email"],
+            "name": user["name"],
+            "picture": user.get("picture"),
+            "email_verified": user.get("email_verified", False),
+            "id_verified": user.get("id_verified", False),
+            "subscription_status": user.get("subscription_status", "trial"),
+            "trial_ends_at": user.get("trial_ends_at"),
+            "subscription_ends_at": user.get("subscription_ends_at")
+        }
+    }
+
+@api_router.post("/auth/google/session")
+async def google_auth_session(request: Request, response: Response):
+    session_id = request.headers.get("X-Session-ID")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Session ID required")
+    
+    import httpx
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": session_id}
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        google_data = resp.json()
+    
+    # Check if user exists
+    user = await db.users.find_one({"email": google_data["email"]}, {"_id": 0})
+    
+    if user:
+        # Update existing user
+        await db.users.update_one(
+            {"email": google_data["email"]},
+            {"$set": {
+                "name": google_data["name"],
+                "picture": google_data.get("picture")
+            }}
+        )
+        user_id = user["user_id"]
+    else:
+        # Create new user
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        now = datetime.now(timezone.utc)
+        trial_ends = now + timedelta(days=FREE_TRIAL_DAYS)
+        
+        user_doc = {
+            "user_id": user_id,
+            "email": google_data["email"],
+            "name": google_data["name"],
+            "picture": google_data.get("picture"),
+            "email_verified": True,  # Google verified
+            "id_verified": False,
+            "subscription_status": "trial",
+            "trial_ends_at": trial_ends.isoformat(),
+            "subscription_ends_at": None,
+            "created_at": now.isoformat()
+        }
+        await db.users.insert_one(user_doc)
+        user = user_doc
+    
+    # Create session
+    session_token = google_data.get("session_token", f"session_{uuid.uuid4().hex}")
+    expires_at = datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRATION_DAYS)
+    
+    await db.user_sessions.delete_many({"user_id": user_id})
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=JWT_EXPIRATION_DAYS * 24 * 60 * 60
+    )
+    
+    user_response = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    return user_response
+
+@api_router.get("/auth/me")
+async def get_me(user: dict = Depends(get_current_user)):
+    return {
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "name": user["name"],
+        "picture": user.get("picture"),
+        "email_verified": user.get("email_verified", False),
+        "id_verified": user.get("id_verified", False),
+        "subscription_status": user.get("subscription_status", "trial"),
+        "trial_ends_at": user.get("trial_ends_at"),
+        "subscription_ends_at": user.get("subscription_ends_at")
+    }
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.user_sessions.delete_one({"session_token": session_token})
+    
+    response.delete_cookie(key="session_token", path="/")
+    return {"message": "Logged out successfully"}
+
+# ============ FAMILY PROFILE ENDPOINTS ============
+
+@api_router.post("/family/profile", response_model=FamilyProfileResponse)
+async def create_family_profile(profile: FamilyProfileCreate, user: dict = Depends(get_current_user)):
+    existing = await db.family_profiles.find_one({"user_id": user["user_id"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="Family profile already exists")
+    
+    family_id = f"family_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    profile_doc = {
+        "family_id": family_id,
+        "user_id": user["user_id"],
+        "family_name": profile.family_name,
+        "bio": profile.bio,
+        "city": profile.city,
+        "state": profile.state,
+        "zip_code": profile.zip_code,
+        "latitude": profile.latitude,
+        "longitude": profile.longitude,
+        "interests": profile.interests,
+        "kids": profile.kids,
+        "search_radius": profile.search_radius,
+        "profile_picture": profile.profile_picture,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.family_profiles.insert_one(profile_doc)
+    
+    return FamilyProfileResponse(**profile_doc)
+
+@api_router.get("/family/profile")
+async def get_my_family_profile(user: dict = Depends(get_current_user)):
+    profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not profile:
+        return None
+    return profile
+
+@api_router.put("/family/profile")
+async def update_family_profile(profile: FamilyProfileCreate, user: dict = Depends(get_current_user)):
+    existing = await db.family_profiles.find_one({"user_id": user["user_id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    update_data = profile.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.family_profiles.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": update_data}
+    )
+    
+    updated = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    return updated
+
+@api_router.get("/family/{family_id}")
+async def get_family_by_id(family_id: str, user: dict = Depends(get_current_user)):
+    profile = await db.family_profiles.find_one({"family_id": family_id}, {"_id": 0})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Family not found")
+    return profile
+
+# ============ FAMILY DISCOVERY ENDPOINTS ============
+
+@api_router.get("/families/nearby")
+async def get_nearby_families(
+    zip_code: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    radius: int = 25,
+    user: dict = Depends(get_current_user)
+):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    
+    query = {"user_id": {"$ne": user["user_id"]}}
+    
+    if zip_code:
+        query["zip_code"] = zip_code
+    elif city and state:
+        query["city"] = {"$regex": city, "$options": "i"}
+        query["state"] = {"$regex": state, "$options": "i"}
+    elif my_profile:
+        # Use user's location
+        if my_profile.get("latitude") and my_profile.get("longitude"):
+            # Will filter by distance after query
+            pass
+        else:
+            query["zip_code"] = my_profile.get("zip_code")
+    
+    families = await db.family_profiles.find(query, {"_id": 0}).to_list(100)
+    
+    # Filter by distance if coordinates available
+    if my_profile and my_profile.get("latitude") and my_profile.get("longitude"):
+        filtered = []
+        for f in families:
+            if f.get("latitude") and f.get("longitude"):
+                dist = calculate_distance(
+                    my_profile["latitude"], my_profile["longitude"],
+                    f["latitude"], f["longitude"]
+                )
+                if dist <= radius:
+                    f["distance"] = round(dist, 1)
+                    filtered.append(f)
+            else:
+                # Include families without coords in same zip
+                if f.get("zip_code") == my_profile.get("zip_code"):
+                    f["distance"] = None
+                    filtered.append(f)
+        families = sorted(filtered, key=lambda x: x.get("distance") or 999)
+    
+    return families
+
+@api_router.get("/families/search")
+async def search_families(
+    q: Optional[str] = None,
+    interests: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    query = {"user_id": {"$ne": user["user_id"]}}
+    
+    if q:
+        query["$or"] = [
+            {"family_name": {"$regex": q, "$options": "i"}},
+            {"city": {"$regex": q, "$options": "i"}},
+            {"bio": {"$regex": q, "$options": "i"}}
+        ]
+    
+    if interests:
+        interest_list = [i.strip() for i in interests.split(",")]
+        query["interests"] = {"$in": interest_list}
+    
+    families = await db.family_profiles.find(query, {"_id": 0}).to_list(50)
+    return families
+
+# ============ EVENT ENDPOINTS ============
+
+@api_router.post("/events", response_model=EventResponse)
+async def create_event(event: EventCreate, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    event_id = f"event_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    event_doc = {
+        "event_id": event_id,
+        "host_family_id": my_profile["family_id"],
+        "host_family_name": my_profile["family_name"],
+        "title": event.title,
+        "description": event.description,
+        "event_date": event.event_date,
+        "event_time": event.event_time,
+        "location": event.location,
+        "city": event.city,
+        "state": event.state,
+        "zip_code": event.zip_code,
+        "latitude": event.latitude,
+        "longitude": event.longitude,
+        "max_attendees": event.max_attendees,
+        "age_range": event.age_range,
+        "event_type": event.event_type,
+        "attendees": [],
+        "status": "upcoming",
+        "created_at": now
+    }
+    
+    await db.events.insert_one(event_doc)
+    return EventResponse(**event_doc)
+
+@api_router.get("/events")
+async def get_events(
+    city: Optional[str] = None,
+    event_type: Optional[str] = None,
+    upcoming_only: bool = True,
+    user: dict = Depends(get_current_user)
+):
+    query = {}
+    
+    if city:
+        query["city"] = {"$regex": city, "$options": "i"}
+    
+    if event_type:
+        query["event_type"] = event_type
+    
+    if upcoming_only:
+        query["event_date"] = {"$gte": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+        query["status"] = "upcoming"
+    
+    events = await db.events.find(query, {"_id": 0}).sort("event_date", 1).to_list(50)
+    return events
+
+@api_router.get("/events/my")
+async def get_my_events(user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return []
+    
+    # Events I'm hosting
+    hosted = await db.events.find(
+        {"host_family_id": my_profile["family_id"]},
+        {"_id": 0}
+    ).to_list(50)
+    
+    # Events I'm attending
+    attending = await db.events.find(
+        {"attendees.family_id": my_profile["family_id"]},
+        {"_id": 0}
+    ).to_list(50)
+    
+    return {"hosted": hosted, "attending": attending}
+
+@api_router.post("/events/{event_id}/rsvp")
+async def rsvp_event(event_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    event = await db.events.find_one({"event_id": event_id})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Check if already attending
+    for att in event.get("attendees", []):
+        if att["family_id"] == my_profile["family_id"]:
+            raise HTTPException(status_code=400, detail="Already registered")
+    
+    # Check max attendees
+    if event.get("max_attendees") and len(event.get("attendees", [])) >= event["max_attendees"]:
+        raise HTTPException(status_code=400, detail="Event is full")
+    
+    attendee = {
+        "family_id": my_profile["family_id"],
+        "family_name": my_profile["family_name"],
+        "rsvp_date": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.events.update_one(
+        {"event_id": event_id},
+        {"$push": {"attendees": attendee}}
+    )
+    
+    return {"message": "RSVP successful"}
+
+@api_router.delete("/events/{event_id}/rsvp")
+async def cancel_rsvp(event_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    await db.events.update_one(
+        {"event_id": event_id},
+        {"$pull": {"attendees": {"family_id": my_profile["family_id"]}}}
+    )
+    
+    return {"message": "RSVP cancelled"}
+
+@api_router.get("/events/{event_id}")
+async def get_event(event_id: str, user: dict = Depends(get_current_user)):
+    event = await db.events.find_one({"event_id": event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return event
+
+# ============ MESSAGING ENDPOINTS ============
+
+@api_router.post("/messages", response_model=MessageResponse)
+async def send_message(message: MessageCreate, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    message_id = f"msg_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    message_doc = {
+        "message_id": message_id,
+        "sender_family_id": my_profile["family_id"],
+        "sender_family_name": my_profile["family_name"],
+        "recipient_family_id": message.recipient_family_id,
+        "content": message.content,
+        "read": False,
+        "created_at": now
+    }
+    
+    await db.messages.insert_one(message_doc)
+    return MessageResponse(**message_doc)
+
+@api_router.get("/messages")
+async def get_messages(user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return []
+    
+    messages = await db.messages.find(
+        {"$or": [
+            {"sender_family_id": my_profile["family_id"]},
+            {"recipient_family_id": my_profile["family_id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return messages
+
+@api_router.get("/messages/conversations")
+async def get_conversations(user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return []
+    
+    # Get all unique conversation partners
+    messages = await db.messages.find(
+        {"$or": [
+            {"sender_family_id": my_profile["family_id"]},
+            {"recipient_family_id": my_profile["family_id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    conversations = {}
+    for msg in messages:
+        other_family_id = msg["recipient_family_id"] if msg["sender_family_id"] == my_profile["family_id"] else msg["sender_family_id"]
+        if other_family_id not in conversations:
+            other_family = await db.family_profiles.find_one({"family_id": other_family_id}, {"_id": 0})
+            conversations[other_family_id] = {
+                "family_id": other_family_id,
+                "family_name": other_family["family_name"] if other_family else "Unknown",
+                "profile_picture": other_family.get("profile_picture") if other_family else None,
+                "last_message": msg["content"],
+                "last_message_date": msg["created_at"],
+                "unread": not msg["read"] and msg["recipient_family_id"] == my_profile["family_id"]
+            }
+    
+    return list(conversations.values())
+
+@api_router.get("/messages/{family_id}")
+async def get_conversation(family_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return []
+    
+    messages = await db.messages.find(
+        {"$or": [
+            {"sender_family_id": my_profile["family_id"], "recipient_family_id": family_id},
+            {"sender_family_id": family_id, "recipient_family_id": my_profile["family_id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(200)
+    
+    # Mark as read
+    await db.messages.update_many(
+        {"sender_family_id": family_id, "recipient_family_id": my_profile["family_id"], "read": False},
+        {"$set": {"read": True}}
+    )
+    
+    return messages
+
+# ============ MEETUP REQUEST ENDPOINTS ============
+
+@api_router.post("/meetup-requests", response_model=MeetupRequestResponse)
+async def create_meetup_request(request_data: MeetupRequestCreate, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    request_id = f"meetup_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    request_doc = {
+        "request_id": request_id,
+        "requester_family_id": my_profile["family_id"],
+        "requester_family_name": my_profile["family_name"],
+        "target_family_id": request_data.target_family_id,
+        "proposed_date": request_data.proposed_date,
+        "proposed_time": request_data.proposed_time,
+        "location": request_data.location,
+        "message": request_data.message,
+        "status": "pending",
+        "created_at": now
+    }
+    
+    await db.meetup_requests.insert_one(request_doc)
+    return MeetupRequestResponse(**request_doc)
+
+@api_router.get("/meetup-requests")
+async def get_meetup_requests(user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return {"incoming": [], "outgoing": []}
+    
+    incoming = await db.meetup_requests.find(
+        {"target_family_id": my_profile["family_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    outgoing = await db.meetup_requests.find(
+        {"requester_family_id": my_profile["family_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return {"incoming": incoming, "outgoing": outgoing}
+
+@api_router.put("/meetup-requests/{request_id}")
+async def respond_meetup_request(request_id: str, status: str, user: dict = Depends(get_current_user)):
+    if status not in ["accepted", "declined"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    request_doc = await db.meetup_requests.find_one({"request_id": request_id})
+    if not request_doc:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if request_doc["target_family_id"] != my_profile["family_id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.meetup_requests.update_one(
+        {"request_id": request_id},
+        {"$set": {"status": status}}
+    )
+    
+    # If accepted, create a confirmed meetup event
+    if status == "accepted":
+        event_id = f"event_{uuid.uuid4().hex[:12]}"
+        now = datetime.now(timezone.utc).isoformat()
+        
+        requester_profile = await db.family_profiles.find_one(
+            {"family_id": request_doc["requester_family_id"]}, {"_id": 0}
+        )
+        
+        event_doc = {
+            "event_id": event_id,
+            "host_family_id": request_doc["requester_family_id"],
+            "host_family_name": requester_profile["family_name"] if requester_profile else "Unknown",
+            "title": f"Meetup with {my_profile['family_name']}",
+            "description": request_doc.get("message", "Scheduled meetup"),
+            "event_date": request_doc["proposed_date"],
+            "event_time": request_doc["proposed_time"],
+            "location": request_doc["location"],
+            "city": my_profile.get("city", ""),
+            "state": my_profile.get("state", ""),
+            "zip_code": my_profile.get("zip_code", ""),
+            "max_attendees": 2,
+            "event_type": "meetup",
+            "attendees": [
+                {"family_id": my_profile["family_id"], "family_name": my_profile["family_name"], "rsvp_date": now}
+            ],
+            "status": "confirmed",
+            "created_at": now
+        }
+        
+        await db.events.insert_one(event_doc)
+    
+    return {"message": f"Request {status}"}
+
+# ============ SUBSCRIPTION ENDPOINTS ============
+
+@api_router.get("/subscription/plans")
+async def get_subscription_plans():
+    return SUBSCRIPTION_PLANS
+
+@api_router.post("/subscription/checkout")
+async def create_subscription_checkout(
+    request: Request,
+    plan: str,
+    user: dict = Depends(get_current_user)
+):
+    if plan not in SUBSCRIPTION_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    
+    plan_details = SUBSCRIPTION_PLANS[plan]
+    host_url = str(request.base_url).rstrip("/")
+    
+    # Get origin from frontend
+    origin = request.headers.get("Origin", host_url)
+    
+    webhook_url = f"{host_url}api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    
+    success_url = f"{origin}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin}/pricing"
+    
+    checkout_request = CheckoutSessionRequest(
+        amount=float(plan_details["price"]),
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "user_id": user["user_id"],
+            "plan": plan,
+            "plan_name": plan_details["name"]
+        }
+    )
+    
+    session = await stripe_checkout.create_checkout_session(checkout_request)
+    
+    # Create payment transaction record
+    await db.payment_transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "session_id": session.session_id,
+        "user_id": user["user_id"],
+        "amount": plan_details["price"],
+        "currency": "usd",
+        "plan": plan,
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"url": session.url, "session_id": session.session_id}
+
+@api_router.get("/subscription/status/{session_id}")
+async def check_subscription_status(session_id: str, user: dict = Depends(get_current_user)):
+    host_url = "https://example.com"  # Not used for status check
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    
+    try:
+        status = await stripe_checkout.get_checkout_status(session_id)
+        
+        # Update transaction
+        txn = await db.payment_transactions.find_one({"session_id": session_id})
+        if txn and txn.get("payment_status") != "paid" and status.payment_status == "paid":
+            plan = txn.get("plan", "monthly")
+            plan_details = SUBSCRIPTION_PLANS.get(plan, SUBSCRIPTION_PLANS["monthly"])
+            
+            subscription_ends = datetime.now(timezone.utc) + timedelta(days=plan_details["duration_days"])
+            
+            await db.payment_transactions.update_one(
+                {"session_id": session_id},
+                {"$set": {
+                    "payment_status": status.payment_status,
+                    "status": status.status
+                }}
+            )
+            
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {
+                    "subscription_status": "active",
+                    "subscription_ends_at": subscription_ends.isoformat(),
+                    "subscription_plan": plan
+                }}
+            )
+        
+        return {
+            "status": status.status,
+            "payment_status": status.payment_status,
+            "amount_total": status.amount_total,
+            "currency": status.currency
+        }
+    except Exception as e:
+        logger.error(f"Error checking subscription status: {e}")
+        raise HTTPException(status_code=400, detail="Error checking payment status")
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("Stripe-Signature")
+    
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    
+    try:
+        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        
+        if webhook_response.payment_status == "paid":
+            user_id = webhook_response.metadata.get("user_id")
+            plan = webhook_response.metadata.get("plan", "monthly")
+            
+            if user_id:
+                plan_details = SUBSCRIPTION_PLANS.get(plan, SUBSCRIPTION_PLANS["monthly"])
+                subscription_ends = datetime.now(timezone.utc) + timedelta(days=plan_details["duration_days"])
+                
+                await db.users.update_one(
+                    {"user_id": user_id},
+                    {"$set": {
+                        "subscription_status": "active",
+                        "subscription_ends_at": subscription_ends.isoformat(),
+                        "subscription_plan": plan
+                    }}
+                )
+                
+                await db.payment_transactions.update_one(
+                    {"session_id": webhook_response.session_id},
+                    {"$set": {"payment_status": "paid", "status": "complete"}}
+                )
+        
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
+
+# ============ ID VERIFICATION ENDPOINT ============
+
+@api_router.post("/verification/submit-id")
+async def submit_id_verification(user: dict = Depends(get_current_user)):
+    # In production, this would integrate with an ID verification service
+    # For now, we'll create a pending verification request
+    verification_id = f"verify_{uuid.uuid4().hex[:12]}"
+    
+    await db.id_verifications.insert_one({
+        "verification_id": verification_id,
+        "user_id": user["user_id"],
+        "status": "pending",
+        "submitted_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "verification_id": verification_id,
+        "status": "pending",
+        "message": "ID verification submitted. You will be notified once reviewed."
+    }
+
+@api_router.get("/verification/status")
+async def get_verification_status(user: dict = Depends(get_current_user)):
+    verification = await db.id_verifications.find_one(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    
+    return {
+        "email_verified": user.get("email_verified", False),
+        "id_verified": user.get("id_verified", False),
+        "verification_request": verification
+    }
+
+# ============ CALENDAR ENDPOINTS ============
+
+@api_router.get("/calendar/events")
+async def get_calendar_events(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    user: dict = Depends(get_current_user)
+):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return []
+    
+    now = datetime.now(timezone.utc)
+    target_month = month or now.month
+    target_year = year or now.year
+    
+    start_date = f"{target_year}-{target_month:02d}-01"
+    if target_month == 12:
+        end_date = f"{target_year + 1}-01-01"
+    else:
+        end_date = f"{target_year}-{target_month + 1:02d}-01"
+    
+    events = await db.events.find(
+        {
+            "$or": [
+                {"host_family_id": my_profile["family_id"]},
+                {"attendees.family_id": my_profile["family_id"]}
+            ],
+            "event_date": {"$gte": start_date, "$lt": end_date}
+        },
+        {"_id": 0}
+    ).to_list(100)
+    
+    return events
+
+# ============ ROOT ENDPOINT ============
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Village Friends API", "version": "1.0.0"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
-
-# Include the router in the main app
+# Include router
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
