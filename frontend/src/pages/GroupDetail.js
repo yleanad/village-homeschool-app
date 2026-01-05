@@ -377,28 +377,147 @@ const GroupDetail = () => {
           {/* Members */}
           <div>
             <div className="bg-white rounded-xl border border-[#E0E0E0] p-6">
-              <h2 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-4">
-                Members ({group.member_count})
-              </h2>
-              <div className="space-y-3">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-fraunces text-xl font-semibold text-[#2C3E50]">
+                  Members ({group.member_count})
+                </h2>
+                {isOwner && (
+                  <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <UserCog className="w-4 h-4 mr-2" />
+                        Transfer Ownership
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Transfer Ownership</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <p className="text-sm text-[#5F6F75]">
+                          Select a member to become the new owner. You will become an admin.
+                        </p>
+                        <Select value={selectedNewOwner} onValueChange={setSelectedNewOwner}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select new owner" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {group.members?.filter(m => m.family_id !== familyProfile?.family_id).map((member) => (
+                              <SelectItem key={member.family_id} value={member.family_id}>
+                                {member.family_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button onClick={handleTransferOwnership} className="w-full btn-primary">
+                          Transfer Ownership
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+
+              {/* Join Requests */}
+              {isAdmin && joinRequests.length > 0 && (
+                <div className="mb-4 p-4 bg-[#D4B896]/10 rounded-lg border border-[#D4B896]/30">
+                  <h3 className="font-semibold text-[#2C3E50] mb-3 flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    Pending Join Requests ({joinRequests.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {joinRequests.map((request) => (
+                      <div key={request.family_id} className="flex items-center justify-between p-2 bg-white rounded">
+                        <span className="text-sm text-[#2C3E50]">{request.family_name}</span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-[#5B9A8B] hover:bg-[#4A8275] text-white h-7 px-2"
+                            onClick={() => handleApproveJoinRequest(request.family_id)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => handleRejectJoinRequest(request.family_id)}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
                 {group.members?.map((member) => (
-                  <Link
+                  <div
                     key={member.family_id}
-                    to={`/family/${member.family_id}`}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F5F3EE] transition"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F5F3EE] transition"
                   >
-                    <div className="w-10 h-10 rounded-full bg-[#5B9A8B]/10 flex items-center justify-center text-[#5B9A8B] font-semibold">
-                      {member.family_name?.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-[#2C3E50] text-sm truncate">{member.family_name}</p>
-                      {member.role === 'owner' && (
-                        <span className="text-xs text-[#D4B896] flex items-center gap-1">
-                          <Crown className="w-3 h-3" /> Owner
+                    <Link to={`/family/${member.family_id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-[#5B9A8B]/10 flex items-center justify-center text-[#5B9A8B] font-semibold">
+                        {member.family_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[#2C3E50] text-sm truncate">{member.family_name}</p>
+                        <span className={`text-xs flex items-center gap-1 ${
+                          member.role === 'owner' ? 'text-[#D4B896]' : 
+                          member.role === 'admin' ? 'text-[#5B9A8B]' : 'text-[#5F6F75]'
+                        }`}>
+                          {member.role === 'owner' && <Crown className="w-3 h-3" />}
+                          {member.role === 'admin' && <Shield className="w-3 h-3" />}
+                          {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                         </span>
-                      )}
-                    </div>
-                  </Link>
+                      </div>
+                    </Link>
+                    
+                    {/* Role management dropdown - only for owner */}
+                    {isOwner && member.family_id !== familyProfile?.family_id && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Settings className="w-4 h-4 text-[#5F6F75]" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {member.role !== 'admin' ? (
+                            <DropdownMenuItem onClick={() => handleUpdateRole(member.family_id, 'admin')}>
+                              <Shield className="w-4 h-4 mr-2" />
+                              Make Admin
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleUpdateRole(member.family_id, 'member')}>
+                              <Users className="w-4 h-4 mr-2" />
+                              Remove Admin
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem 
+                            className="text-red-500"
+                            onClick={() => handleRemoveMember(member.family_id)}
+                          >
+                            <UserMinus className="w-4 h-4 mr-2" />
+                            Remove Member
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                    
+                    {/* Admin can remove regular members */}
+                    {isAdmin && !isOwner && member.role === 'member' && member.family_id !== familyProfile?.family_id && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-red-500"
+                        onClick={() => handleRemoveMember(member.family_id)}
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
