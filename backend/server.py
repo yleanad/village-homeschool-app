@@ -589,6 +589,9 @@ async def get_nearby_families(
     city: Optional[str] = None,
     state: Optional[str] = None,
     radius: int = 25,
+    min_age: Optional[int] = None,
+    max_age: Optional[int] = None,
+    interests: Optional[str] = None,
     user: dict = Depends(get_current_user)
 ):
     my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
@@ -608,7 +611,30 @@ async def get_nearby_families(
         else:
             query["zip_code"] = my_profile.get("zip_code")
     
+    # Filter by interests if provided
+    if interests:
+        interest_list = [i.strip() for i in interests.split(",")]
+        query["interests"] = {"$in": interest_list}
+    
     families = await db.family_profiles.find(query, {"_id": 0}).to_list(100)
+    
+    # Filter by kids' age range if provided
+    if min_age is not None or max_age is not None:
+        age_filtered = []
+        for f in families:
+            kids = f.get("kids", [])
+            if not kids:
+                continue
+            # Check if any kid is within the age range
+            for kid in kids:
+                kid_age = kid.get("age", 0)
+                if min_age is not None and kid_age < min_age:
+                    continue
+                if max_age is not None and kid_age > max_age:
+                    continue
+                age_filtered.append(f)
+                break
+        families = age_filtered
     
     # Filter by distance if coordinates available
     if my_profile and my_profile.get("latitude") and my_profile.get("longitude"):
