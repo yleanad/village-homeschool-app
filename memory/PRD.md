@@ -133,6 +133,15 @@ Build an app where homeschool parents can find other homeschool families in the 
 - Enhanced login/register pages with coral branding elements
 - Updated Groups and Settings pages with coral accents
 
+### January 2025 - Advanced Search Filters
+- Added expandable filter panel on Discover page
+- Kids' age range slider (0-18 years)
+- Interest-based filtering with multi-select buttons
+- Combined age + interest filters
+- Active filter tags with remove functionality
+- Clear all filters option
+- Backend API updated: `/api/families/nearby` now accepts `min_age`, `max_age`, `interests` params
+
 ---
 
 ## Prioritized Backlog
@@ -155,12 +164,12 @@ Build an app where homeschool parents can find other homeschool families in the 
 - [x] Profile photo upload
 - [x] Group member roles (admin delegation)
 - [x] Enhanced coral accent color throughout UI
+- [x] Advanced search filters for family discovery (age ranges, interests)
 
 ### P2 (High Priority) - Future
 - [ ] Real-time messaging (WebSocket)
 - [ ] Push notifications for new messages/events
 - [ ] Email notifications for meetup requests
-- [ ] Advanced search filters (age ranges, specific interests)
 
 ### P2 (Medium Priority) - Future
 - [ ] Review/recommendation system
