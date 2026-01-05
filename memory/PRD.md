@@ -113,11 +113,25 @@ Build an app where homeschool parents can find other homeschool families in the 
 - Subscription success page
 
 **Design**
-- Brand colors: Teal (#2A9D8F), Forest (#264653), Coral (#E76F51), Warm Sand (#F4F1DE)
+- Brand colors: Teal (#5B9A8B), Forest (#2C3E50), Coral (#C8907A), Warm Sand (#F5F3EE), Golden (#D4B896)
+- Muted earthy palette with warm coral accents throughout
 - Font: Fraunces (headings) + Nunito (body)
 - Responsive layout with mobile sidebar
 - Card-based UI with hover effects
 - Leaflet map integration
+
+---
+
+## Recent Updates
+
+### January 2025 - UI Color Enhancement
+- Added more coral accent (#C8907A) throughout the app for warmer aesthetic
+- Updated secondary button style with coral border and hover state
+- Changed navigation active states to coral
+- Updated feature icons, badges, and checkmarks to coral
+- Applied coral to loading spinners, pricing highlights, and quick action buttons
+- Enhanced login/register pages with coral branding elements
+- Updated Groups and Settings pages with coral accents
 
 ---
 
@@ -138,12 +152,14 @@ Build an app where homeschool parents can find other homeschool families in the 
 - [x] Post announcements
 - [x] Group events
 - [x] Muted color palette update
+- [x] Profile photo upload
+- [x] Group member roles (admin delegation)
+- [x] Enhanced coral accent color throughout UI
 
 ### P2 (High Priority) - Future
 - [ ] Real-time messaging (WebSocket)
 - [ ] Push notifications for new messages/events
 - [ ] Email notifications for meetup requests
-- [ ] Profile photo upload
 - [ ] Advanced search filters (age ranges, specific interests)
 
 ### P2 (Medium Priority) - Future
