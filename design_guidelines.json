@@ -1,0 +1,159 @@
+{
+  "identity": {
+    "name": "Village Friends",
+    "tone": "Warm, Trustworthy, Community-Focused, Earthy, Safe",
+    "target_audience": "Homeschool parents seeking connection and socialization for their children",
+    "design_archetype": "Organic & Earthy (Trust, Growth, Calm)"
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Fraunces, Merriweather, serif",
+      "weight": "600",
+      "style": "Soft Serif for a storybook/village feel",
+      "usage": "All major headings (H1-H3)"
+    },
+    "body": {
+      "font_family": "Nunito, DM Sans, sans-serif",
+      "weight": "400",
+      "style": "Rounded or Humanist Sans for friendliness and legibility",
+      "usage": "Paragraphs, UI text, labels"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Code snippets, technical data (if any)"
+    }
+  },
+  "colors": {
+    "primary": {
+      "name": "Village Teal",
+      "hex": "#2A9D8F",
+      "tailwind": "bg-[#2A9D8F] text-white",
+      "usage": "Primary buttons, active states, key brand elements"
+    },
+    "secondary": {
+      "name": "Forest Canopy",
+      "hex": "#264653",
+      "tailwind": "bg-[#264653] text-white",
+      "usage": "Footers, dark backgrounds, strong text"
+    },
+    "accent": {
+      "name": "Coral Bloom",
+      "hex": "#E76F51",
+      "tailwind": "bg-[#E76F51] text-white",
+      "usage": "Call-to-actions (secondary), highlights, notifications"
+    },
+    "neutral": {
+      "background": "#F4F1DE",
+      "surface": "#FFFFFF",
+      "text_primary": "#264653",
+      "text_secondary": "#5F6F75"
+    },
+    "feedback": {
+      "success": "#2A9D8F",
+      "warning": "#E9C46A",
+      "error": "#E76F51"
+    },
+    "gradients": {
+      "hero": "linear-gradient(135deg, #F4F1DE 0%, #E0F2F1 100%)",
+      "overlay": "linear-gradient(to bottom, rgba(38, 70, 83, 0), rgba(38, 70, 83, 0.8))"
+    }
+  },
+  "layout": {
+    "grid_system": {
+      "marketing": "Tetris Grid (Asymmetrical, organic)",
+      "dashboard": "Control Room Grid (Dense but soft)",
+      "spacing": "Generous (p-6 to p-12 for containers)"
+    },
+    "radius": {
+      "default": "rounded-2xl",
+      "buttons": "rounded-full",
+      "cards": "rounded-xl"
+    },
+    "shadows": {
+      "card": "0 4px 20px -2px rgba(38, 70, 83, 0.1)",
+      "hover": "0 10px 25px -5px rgba(38, 70, 83, 0.15)"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#2A9D8F] hover:bg-[#21867a] text-white rounded-full px-8 py-3 font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5",
+      "secondary": "bg-[#F4F1DE] text-[#264653] border-2 border-[#264653] rounded-full px-8 py-3 font-semibold hover:bg-[#E9C46A] transition-all"
+    },
+    "cards": {
+      "style": "bg-white rounded-xl border border-[#E0E0E0] shadow-sm hover:shadow-md transition-all p-6",
+      "feature": "bg-[#F4F1DE] rounded-2xl p-8 border-none"
+    },
+    "inputs": {
+      "style": "bg-white border-[#E0E0E0] rounded-lg focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent h-12 px-4"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Subtle paper grain or noise overlay on backgrounds to enhance the 'earthy' feel",
+    "shapes": "Organic blobs and waves to separate sections, avoiding harsh straight lines",
+    "icons": "Phosphor Icons (Duotone) or Heroicons (Outline) - Soft and rounded"
+  },
+  "images": {
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1763738173696-3354654fa8fe?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Diverse kids playing in nature",
+      "category": "hero_main"
+    },
+    "community": [
+      {
+        "url": "https://images.unsplash.com/photo-1759971529647-144f78aa0df1?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Families walking in park",
+        "category": "feature_community"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1763771056917-188ad0f3479a?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Family picnic",
+        "category": "feature_social"
+      }
+    ],
+    "kids_activities": [
+      {
+        "url": "https://images.unsplash.com/photo-1764816636564-25eadaf07a44?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Mother and toddler walking",
+        "category": "activity_learning"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1650498438073-e98824700b85?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Boys in flower field",
+        "category": "activity_nature"
+      }
+    ],
+    "testimonials": [
+      {
+        "url": "https://images.unsplash.com/photo-1760633549227-901e0c3cf9d3?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Happy family portrait",
+        "category": "avatar_family"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1621291569636-a96ce37f5be8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Mother and daughter",
+        "category": "avatar_parent"
+      }
+    ]
+  },
+  "motion": {
+    "page_transition": "initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4, ease: 'easeOut' }}",
+    "hover_lift": "whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300 }}",
+    "stagger_children": "variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }}"
+  },
+  "instructions_to_main_agent": [
+    "Use the 'Fraunces' font for all headings to establish the village/storybook brand identity.",
+    "Implement the 'Village Teal' (#2A9D8F) as the primary action color, but use 'Coral Bloom' (#E76F51) sparingly for high-priority alerts or CTAs.",
+    "Ensure all containers have generous padding (p-6 minimum) to maintain the 'breathing room' philosophy.",
+    "Use the provided image URLs for the respective sections. Do not use placeholders.",
+    "For the dashboard, use the 'Control Room' grid but soften it with rounded corners and the neutral background color (#F4F1DE).",
+    "Implement 'Sonner' for all toast notifications.",
+    "Use 'Lucide-React' or 'Phosphor Icons' for iconography.",
+    "Ensure all interactive elements have a 'data-testid' attribute."
+  ],
+  "universal_guidelines": [
+    "Do not use generic centered layouts; use asymmetry and the 'Tetris' grid for marketing pages.",
+    "Avoid pure black (#000000); use the deep 'Forest Canopy' (#264653) for text and dark backgrounds.",
+    "Ensure high contrast for accessibility, especially with the muted color palette.",
+    "Add micro-interactions to all buttons and cards (hover lift, shadow expansion)."
+  ]
+}
