@@ -140,8 +140,8 @@ const DashboardLayout = ({ children }) => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="lg:ml-64 pt-20 lg:pt-8 pb-8 px-4 lg:px-8">
+      {/* Main Content - Add bottom padding for mobile nav */}
+      <main className="lg:ml-64 pt-20 lg:pt-8 pb-24 md:pb-8 px-4 lg:px-8">
         {children}
       </main>
     </div>
