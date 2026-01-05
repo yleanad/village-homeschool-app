@@ -23,6 +23,12 @@ L.Icon.Default.mergeOptions({
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+const INTERESTS = [
+  'Nature & Outdoors', 'Arts & Crafts', 'Music', 'Science', 'Reading',
+  'Sports', 'Cooking', 'Gardening', 'Animals', 'Travel', 'History',
+  'Math', 'Languages', 'Technology', 'Drama/Theater', 'Dance'
+];
+
 const Discover = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +36,39 @@ const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [radius, setRadius] = useState('25');
   const [mapCenter, setMapCenter] = useState([39.8283, -98.5795]); // US center
+  
+  // Advanced filters
+  const [showFilters, setShowFilters] = useState(false);
+  const [ageRange, setAgeRange] = useState([0, 18]);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [filtersApplied, setFiltersApplied] = useState(false);
 
   useEffect(() => {
     fetchFamilies();
   }, [radius]);
 
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    params.append('radius', radius);
+    
+    if (ageRange[0] > 0) {
+      params.append('min_age', ageRange[0].toString());
+    }
+    if (ageRange[1] < 18) {
+      params.append('max_age', ageRange[1].toString());
+    }
+    if (selectedInterests.length > 0) {
+      params.append('interests', selectedInterests.join(','));
+    }
+    
+    return params.toString();
+  };
+
   const fetchFamilies = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/families/nearby?radius=${radius}`, {
+      const queryString = buildQueryParams();
+      const response = await axios.get(`${API_URL}/api/families/nearby?${queryString}`, {
         withCredentials: true
       });
       setFamilies(response.data);
@@ -55,22 +86,59 @@ const Discover = () => {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && selectedInterests.length === 0 && ageRange[0] === 0 && ageRange[1] === 18) {
       fetchFamilies();
       return;
     }
     
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/families/search?q=${encodeURIComponent(searchQuery)}`, {
+      const queryString = buildQueryParams();
+      let url = `${API_URL}/api/families/nearby?${queryString}`;
+      
+      const response = await axios.get(url, {
         withCredentials: true
       });
-      setFamilies(response.data);
+      
+      // Client-side filter by search query if provided
+      let results = response.data;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        results = results.filter(family =>
+          family.family_name?.toLowerCase().includes(q) ||
+          family.city?.toLowerCase().includes(q) ||
+          family.bio?.toLowerCase().includes(q) ||
+          family.interests?.some(i => i.toLowerCase().includes(q))
+        );
+      }
+      
+      setFamilies(results);
+      setFiltersApplied(selectedInterests.length > 0 || ageRange[0] > 0 || ageRange[1] < 18);
     } catch (error) {
       console.error('Error searching families:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleInterest = (interest) => {
+    setSelectedInterests(prev =>
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    );
+  };
+
+  const clearFilters = () => {
+    setAgeRange([0, 18]);
+    setSelectedInterests([]);
+    setSearchQuery('');
+    setFiltersApplied(false);
+  };
+
+  const applyFilters = () => {
+    handleSearch();
+    setShowFilters(false);
   };
 
   const filteredFamilies = families.filter(family =>
