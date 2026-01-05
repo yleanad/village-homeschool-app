@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, MapPin, Calendar, Shield, MessageCircle, Heart, ArrowRight, Check } from 'lucide-react';
+import { Users, MapPin, Calendar, Shield, MessageCircle, Heart, ArrowRight, Check, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Landing = () => {
@@ -42,16 +42,16 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F4F1DE]">
+    <div className="min-h-screen bg-[#F5F3EE]">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[#E0E0E0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2" data-testid="logo">
-              <div className="w-10 h-10 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#5B9A8B] flex items-center justify-center">
                 <Heart className="w-5 h-5 text-white" />
               </div>
-              <span className="font-fraunces text-xl font-semibold text-[#264653]">Village Friends</span>
+              <span className="font-fraunces text-xl font-semibold text-[#2C3E50]">Village Friends</span>
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
@@ -62,12 +62,12 @@ const Landing = () => {
             
             <div className="flex items-center gap-3">
               <Link to="/login">
-                <Button variant="ghost" className="text-[#264653] font-medium" data-testid="login-btn">
+                <Button variant="ghost" className="text-[#2C3E50] font-medium" data-testid="login-btn">
                   Log In
                 </Button>
               </Link>
               <Link to="/register">
-                <Button className="bg-[#2A9D8F] hover:bg-[#21867a] text-white rounded-full px-6" data-testid="get-started-btn">
+                <Button className="bg-[#5B9A8B] hover:bg-[#4A8275] text-white rounded-full px-6" data-testid="get-started-btn">
                   Get Started
                 </Button>
               </Link>
@@ -88,12 +88,12 @@ const Landing = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block px-4 py-2 bg-[#2A9D8F]/10 text-[#2A9D8F] rounded-full text-sm font-semibold mb-6">
+              <span className="inline-block px-4 py-2 bg-[#5B9A8B]/10 text-[#5B9A8B] rounded-full text-sm font-semibold mb-6">
                 🏡 Building Community Together
               </span>
-              <h1 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-bold text-[#264653] leading-tight mb-6">
+              <h1 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-bold text-[#2C3E50] leading-tight mb-6">
                 Where Homeschool Families{' '}
-                <span className="text-[#2A9D8F]">Find Their Village</span>
+                <span className="text-[#5B9A8B]">Find Their Village</span>
               </h1>
               <p className="text-lg text-[#5F6F75] mb-8 max-w-lg">
                 Connect with nearby homeschool families, arrange playdates, and give your children the gift of friendship and community.
@@ -112,11 +112,11 @@ const Landing = () => {
               </div>
               <div className="flex items-center gap-6 mt-8 text-sm text-[#5F6F75]">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#2A9D8F]" />
+                  <Check className="w-4 h-4 text-[#5B9A8B]" />
                   <span>14-day free trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#2A9D8F]" />
+                  <Check className="w-4 h-4 text-[#5B9A8B]" />
                   <span>No credit card required</span>
                 </div>
               </div>
@@ -134,7 +134,7 @@ const Landing = () => {
                   alt="Kids playing together"
                   className="w-full h-[400px] lg:h-[500px] object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#264653]/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2C3E50]/60 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ const Landing = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#264653] mb-4">
+            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#2C3E50] mb-4">
               Everything You Need to Build Community
             </h2>
             <p className="text-[#5F6F75] text-lg max-w-2xl mx-auto">
@@ -181,12 +181,12 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-[#F4F1DE] rounded-2xl p-6 card-hover"
+                className="bg-[#F5F3EE] rounded-2xl p-6 card-hover"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#2A9D8F]/10 flex items-center justify-center text-[#2A9D8F] mb-4">
+                <div className="w-12 h-12 rounded-xl bg-[#5B9A8B]/10 flex items-center justify-center text-[#5B9A8B] mb-4">
                   {feature.icon}
                 </div>
-                <h3 className="font-fraunces text-xl font-semibold text-[#264653] mb-2">
+                <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">
                   {feature.title}
                 </h3>
                 <p className="text-[#5F6F75]">
@@ -198,8 +198,51 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Co-op Premium Feature */}
+      <section className="py-20 px-4 bg-gradient-to-r from-[#D4B896]/20 to-[#C8907A]/10">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4B896]/30 text-[#8B7355] rounded-full text-sm font-semibold mb-6">
+              <Crown className="w-4 h-4" />
+              Premium Feature
+            </span>
+            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#2C3E50] mb-4">
+              Co-op & Group Management
+            </h2>
+            <p className="text-[#5F6F75] text-lg max-w-2xl mx-auto">
+              Create and manage homeschool co-ops, activity clubs, and support groups. Post announcements, organize events, and build your community.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { title: "Create Groups", desc: "Start co-ops, clubs, or support groups for your community" },
+              { title: "Post Announcements", desc: "Keep members informed with pinned updates" },
+              { title: "Organize Events", desc: "Schedule group activities and field trips" }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-xl p-6 shadow-sm"
+              >
+                <h3 className="font-fraunces text-lg font-semibold text-[#2C3E50] mb-2">{item.title}</h3>
+                <p className="text-[#5F6F75] text-sm">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -207,7 +250,7 @@ const Landing = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#264653] mb-4">
+            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#2C3E50] mb-4">
               How Village Friends Works
             </h2>
           </motion.div>
@@ -226,10 +269,10 @@ const Landing = () => {
                 transition={{ delay: index * 0.15 }}
                 className="text-center"
               >
-                <div className="w-16 h-16 rounded-full bg-[#2A9D8F] text-white font-fraunces text-2xl font-bold flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-full bg-[#5B9A8B] text-white font-fraunces text-2xl font-bold flex items-center justify-center mx-auto mb-4">
                   {item.step}
                 </div>
-                <h3 className="font-fraunces text-xl font-semibold text-[#264653] mb-2">{item.title}</h3>
+                <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">{item.title}</h3>
                 <p className="text-[#5F6F75]">{item.description}</p>
               </motion.div>
             ))}
@@ -238,7 +281,7 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 bg-white">
+      <section id="pricing" className="py-20 px-4 bg-[#F5F3EE]">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -246,7 +289,7 @@ const Landing = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#264653] mb-4">
+            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#2C3E50] mb-4">
               Simple, Transparent Pricing
             </h2>
             <p className="text-[#5F6F75] text-lg">
@@ -261,15 +304,15 @@ const Landing = () => {
               viewport={{ once: true }}
               className="pricing-card"
             >
-              <h3 className="font-fraunces text-xl font-semibold text-[#264653] mb-2">Monthly</h3>
+              <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">Monthly</h3>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="font-fraunces text-4xl font-bold text-[#264653]">$9.99</span>
+                <span className="font-fraunces text-4xl font-bold text-[#2C3E50]">$9.99</span>
                 <span className="text-[#5F6F75]">/month</span>
               </div>
               <ul className="space-y-3 mb-6">
                 {["Unlimited family connections", "Event creation & RSVP", "Direct messaging", "Map-based discovery", "Calendar integration"].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-[#5F6F75]">
-                    <Check className="w-4 h-4 text-[#2A9D8F]" />
+                    <Check className="w-4 h-4 text-[#5B9A8B]" />
                     {item}
                   </li>
                 ))}
@@ -288,16 +331,16 @@ const Landing = () => {
               transition={{ delay: 0.1 }}
               className="pricing-card featured"
             >
-              <h3 className="font-fraunces text-xl font-semibold text-[#264653] mb-2">Annual</h3>
+              <h3 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-2">Annual</h3>
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="font-fraunces text-4xl font-bold text-[#264653]">$89.99</span>
+                <span className="font-fraunces text-4xl font-bold text-[#2C3E50]">$89.99</span>
                 <span className="text-[#5F6F75]">/year</span>
               </div>
-              <p className="text-sm text-[#2A9D8F] font-medium mb-4">Save $30 compared to monthly!</p>
+              <p className="text-sm text-[#5B9A8B] font-medium mb-4">Save $30 compared to monthly!</p>
               <ul className="space-y-3 mb-6">
-                {["Everything in Monthly", "Priority support", "Early access to features", "Family verification badge", "Community events access"].map((item, i) => (
+                {["Everything in Monthly", "Co-op & Group Management", "Post announcements", "Group events", "Priority support"].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-[#5F6F75]">
-                    <Check className="w-4 h-4 text-[#2A9D8F]" />
+                    <Check className="w-4 h-4 text-[#5B9A8B]" />
                     {item}
                   </li>
                 ))}
@@ -313,7 +356,7 @@ const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4">
+      <section id="testimonials" className="py-20 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -321,7 +364,7 @@ const Landing = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#264653] mb-4">
+            <h2 className="font-fraunces text-3xl sm:text-4xl font-bold text-[#2C3E50] mb-4">
               Families Love Village Friends
             </h2>
           </motion.div>
@@ -334,12 +377,12 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 shadow-sm"
+                className="bg-[#F5F3EE] rounded-2xl p-8"
               >
                 <p className="text-[#5F6F75] text-lg mb-6 italic">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
                   <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover" />
-                  <span className="font-semibold text-[#264653]">{testimonial.name}</span>
+                  <span className="font-semibold text-[#2C3E50]">{testimonial.name}</span>
                 </div>
               </motion.div>
             ))}
@@ -348,7 +391,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-[#264653]">
+      <section className="py-20 px-4 bg-[#2C3E50]">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -362,7 +405,7 @@ const Landing = () => {
               Join hundreds of homeschool families who have found connection, support, and friendship through Village Friends.
             </p>
             <Link to="/register">
-              <Button className="bg-[#E76F51] hover:bg-[#d55a3e] text-white rounded-full px-8 py-3 text-lg font-semibold" data-testid="cta-button">
+              <Button className="bg-[#C8907A] hover:bg-[#B07A66] text-white rounded-full px-8 py-3 text-lg font-semibold" data-testid="cta-button">
                 Start Your Free Trial Today
               </Button>
             </Link>
@@ -371,11 +414,11 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-[#264653]">
+      <footer className="py-12 px-4 bg-[#2C3E50]">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#2A9D8F] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-[#5B9A8B] flex items-center justify-center">
                 <Heart className="w-4 h-4 text-white" />
               </div>
               <span className="font-fraunces text-white font-semibold">Village Friends</span>
