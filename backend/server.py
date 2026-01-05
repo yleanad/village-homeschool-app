@@ -916,6 +916,260 @@ async def respond_meetup_request(request_id: str, status: str, user: dict = Depe
     
     return {"message": f"Request {status}"}
 
+# ============ CO-OP / GROUP ENDPOINTS (PREMIUM) ============
+
+async def check_premium_access(user: dict) -> bool:
+    """Check if user has premium (active subscription) access for co-op features"""
+    return user.get("subscription_status") == "active"
+
+@api_router.post("/groups", response_model=CoopGroupResponse)
+async def create_group(group: CoopGroupCreate, user: dict = Depends(get_current_user)):
+    # Check premium access
+    if not await check_premium_access(user):
+        raise HTTPException(status_code=403, detail="Premium subscription required for co-op/group management")
+    
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    group_id = f"group_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    group_doc = {
+        "group_id": group_id,
+        "owner_family_id": my_profile["family_id"],
+        "owner_family_name": my_profile["family_name"],
+        "name": group.name,
+        "description": group.description,
+        "city": group.city,
+        "state": group.state,
+        "zip_code": group.zip_code,
+        "group_type": group.group_type,
+        "focus_areas": group.focus_areas,
+        "age_range": group.age_range,
+        "meeting_frequency": group.meeting_frequency,
+        "max_members": group.max_members,
+        "is_private": group.is_private,
+        "members": [{"family_id": my_profile["family_id"], "family_name": my_profile["family_name"], "role": "owner", "joined_at": now}],
+        "member_count": 1,
+        "announcements": [],
+        "created_at": now
+    }
+    
+    await db.coop_groups.insert_one(group_doc)
+    return CoopGroupResponse(**group_doc)
+
+@api_router.get("/groups")
+async def get_groups(
+    city: Optional[str] = None,
+    group_type: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    query = {"is_private": False}
+    
+    if city:
+        query["city"] = {"$regex": city, "$options": "i"}
+    
+    if group_type:
+        query["group_type"] = group_type
+    
+    groups = await db.coop_groups.find(query, {"_id": 0, "announcements": 0}).to_list(50)
+    return groups
+
+@api_router.get("/groups/my")
+async def get_my_groups(user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        return {"owned": [], "member_of": []}
+    
+    owned = await db.coop_groups.find(
+        {"owner_family_id": my_profile["family_id"]},
+        {"_id": 0}
+    ).to_list(50)
+    
+    member_of = await db.coop_groups.find(
+        {"members.family_id": my_profile["family_id"], "owner_family_id": {"$ne": my_profile["family_id"]}},
+        {"_id": 0}
+    ).to_list(50)
+    
+    return {"owned": owned, "member_of": member_of}
+
+@api_router.get("/groups/{group_id}")
+async def get_group(group_id: str, user: dict = Depends(get_current_user)):
+    group = await db.coop_groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    
+    # Check if user is a member (for private groups)
+    if group.get("is_private"):
+        is_member = any(m["family_id"] == my_profile["family_id"] for m in group.get("members", []))
+        if not is_member:
+            raise HTTPException(status_code=403, detail="This group is private")
+    
+    return group
+
+@api_router.post("/groups/{group_id}/join")
+async def join_group(group_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if already a member
+    if any(m["family_id"] == my_profile["family_id"] for m in group.get("members", [])):
+        raise HTTPException(status_code=400, detail="Already a member")
+    
+    # Check max members
+    if group.get("max_members") and len(group.get("members", [])) >= group["max_members"]:
+        raise HTTPException(status_code=400, detail="Group is full")
+    
+    # Check if private
+    if group.get("is_private"):
+        # Add to pending requests instead
+        await db.coop_groups.update_one(
+            {"group_id": group_id},
+            {"$push": {"join_requests": {
+                "family_id": my_profile["family_id"],
+                "family_name": my_profile["family_name"],
+                "requested_at": datetime.now(timezone.utc).isoformat()
+            }}}
+        )
+        return {"message": "Join request sent to group owner"}
+    
+    now = datetime.now(timezone.utc).isoformat()
+    member = {
+        "family_id": my_profile["family_id"],
+        "family_name": my_profile["family_name"],
+        "role": "member",
+        "joined_at": now
+    }
+    
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$push": {"members": member}, "$inc": {"member_count": 1}}
+    )
+    
+    return {"message": "Joined group successfully"}
+
+@api_router.delete("/groups/{group_id}/leave")
+async def leave_group(group_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    if group["owner_family_id"] == my_profile["family_id"]:
+        raise HTTPException(status_code=400, detail="Owner cannot leave. Transfer ownership or delete the group.")
+    
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$pull": {"members": {"family_id": my_profile["family_id"]}}, "$inc": {"member_count": -1}}
+    )
+    
+    return {"message": "Left group"}
+
+@api_router.post("/groups/{group_id}/announcements")
+async def create_announcement(group_id: str, announcement: CoopAnnouncementCreate, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is owner or admin
+    member = next((m for m in group.get("members", []) if m["family_id"] == my_profile["family_id"]), None)
+    if not member or member.get("role") not in ["owner", "admin"]:
+        raise HTTPException(status_code=403, detail="Only owners/admins can post announcements")
+    
+    announcement_id = f"ann_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    announcement_doc = {
+        "announcement_id": announcement_id,
+        "title": announcement.title,
+        "content": announcement.content,
+        "pinned": announcement.pinned,
+        "author_family_id": my_profile["family_id"],
+        "author_family_name": my_profile["family_name"],
+        "created_at": now
+    }
+    
+    await db.coop_groups.update_one(
+        {"group_id": group_id},
+        {"$push": {"announcements": {"$each": [announcement_doc], "$position": 0}}}
+    )
+    
+    return announcement_doc
+
+@api_router.post("/groups/{group_id}/events")
+async def create_group_event(group_id: str, event: EventCreate, user: dict = Depends(get_current_user)):
+    """Create an event specifically for a co-op group"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is a member
+    if not any(m["family_id"] == my_profile["family_id"] for m in group.get("members", [])):
+        raise HTTPException(status_code=403, detail="Must be a group member")
+    
+    event_id = f"event_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    event_doc = {
+        "event_id": event_id,
+        "group_id": group_id,
+        "group_name": group["name"],
+        "host_family_id": my_profile["family_id"],
+        "host_family_name": my_profile["family_name"],
+        "title": event.title,
+        "description": event.description,
+        "event_date": event.event_date,
+        "event_time": event.event_time,
+        "location": event.location,
+        "city": event.city,
+        "state": event.state,
+        "zip_code": event.zip_code,
+        "max_attendees": event.max_attendees,
+        "age_range": event.age_range,
+        "event_type": event.event_type,
+        "attendees": [],
+        "status": "upcoming",
+        "created_at": now
+    }
+    
+    await db.events.insert_one(event_doc)
+    return EventResponse(**event_doc)
+
+@api_router.delete("/groups/{group_id}")
+async def delete_group(group_id: str, user: dict = Depends(get_current_user)):
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+    
+    group = await db.coop_groups.find_one({"group_id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    if group["owner_family_id"] != my_profile["family_id"]:
+        raise HTTPException(status_code=403, detail="Only the owner can delete the group")
+    
+    await db.coop_groups.delete_one({"group_id": group_id})
+    return {"message": "Group deleted"}
+
 # ============ SUBSCRIPTION ENDPOINTS ============
 
 @api_router.get("/subscription/plans")
