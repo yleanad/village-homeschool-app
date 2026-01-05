@@ -21,6 +21,8 @@ import Settings from "@/pages/Settings";
 import Pricing from "@/pages/Pricing";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import Onboarding from "@/pages/Onboarding";
+import Groups from "@/pages/Groups";
+import GroupDetail from "@/pages/GroupDetail";
 
 // Context
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -72,6 +74,8 @@ function AppRouter() {
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/messages/:familyId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+      <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+      <Route path="/groups/:groupId" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/family/:familyId" element={<ProtectedRoute><FamilyProfile /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
