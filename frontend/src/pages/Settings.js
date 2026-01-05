@@ -150,10 +150,14 @@ const Settings = () => {
         </h1>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="bg-white border border-[#E0E0E0]">
+          <TabsList className="bg-white border border-[#E0E0E0] flex-wrap">
             <TabsTrigger value="profile" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
             </TabsTrigger>
             <TabsTrigger value="verification" className="data-[state=active]:bg-[#C8907A] data-[state=active]:text-white">
               <Shield className="w-4 h-4 mr-2" />
@@ -164,6 +168,16 @@ const Settings = () => {
               Subscription
             </TabsTrigger>
           </TabsList>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <NotificationSettings />
+            </motion.div>
+          </TabsContent>
 
           {/* Profile Tab */}
           <TabsContent value="profile">
