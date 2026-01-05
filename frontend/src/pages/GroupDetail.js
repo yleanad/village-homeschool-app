@@ -118,6 +118,78 @@ const GroupDetail = () => {
     }
   };
 
+  const handleUpdateRole = async (familyId, newRole) => {
+    try {
+      await axios.put(`${API_URL}/api/groups/${groupId}/members/role`, 
+        { family_id: familyId, role: newRole },
+        { withCredentials: true }
+      );
+      toast.success(`Role updated to ${newRole}`);
+      fetchGroup();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update role');
+    }
+  };
+
+  const handleRemoveMember = async (familyId) => {
+    if (!window.confirm('Are you sure you want to remove this member?')) return;
+    
+    try {
+      await axios.delete(`${API_URL}/api/groups/${groupId}/members/${familyId}`, {
+        withCredentials: true
+      });
+      toast.success('Member removed');
+      fetchGroup();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to remove member');
+    }
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!selectedNewOwner) {
+      toast.error('Please select a new owner');
+      return;
+    }
+    
+    if (!window.confirm('Are you sure you want to transfer ownership? This cannot be undone.')) return;
+    
+    try {
+      await axios.post(`${API_URL}/api/groups/${groupId}/transfer-ownership?new_owner_family_id=${selectedNewOwner}`, {}, {
+        withCredentials: true
+      });
+      toast.success('Ownership transferred');
+      setTransferOpen(false);
+      fetchGroup();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to transfer ownership');
+    }
+  };
+
+  const handleApproveJoinRequest = async (familyId) => {
+    try {
+      await axios.post(`${API_URL}/api/groups/${groupId}/join-requests/${familyId}/approve`, {}, {
+        withCredentials: true
+      });
+      toast.success('Member approved!');
+      fetchJoinRequests();
+      fetchGroup();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to approve');
+    }
+  };
+
+  const handleRejectJoinRequest = async (familyId) => {
+    try {
+      await axios.post(`${API_URL}/api/groups/${groupId}/join-requests/${familyId}/reject`, {}, {
+        withCredentials: true
+      });
+      toast.success('Request rejected');
+      fetchJoinRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to reject');
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
