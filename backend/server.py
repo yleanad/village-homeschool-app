@@ -526,6 +526,61 @@ async def get_family_by_id(family_id: str, user: dict = Depends(get_current_user
         raise HTTPException(status_code=404, detail="Family not found")
     return profile
 
+# ============ PHOTO UPLOAD ENDPOINTS ============
+
+class PhotoUploadRequest(BaseModel):
+    image_data: str  # Base64 encoded image
+
+@api_router.post("/family/profile/photo")
+async def upload_profile_photo(photo_data: PhotoUploadRequest, user: dict = Depends(get_current_user)):
+    """Upload a profile photo for the family (base64 encoded)"""
+    my_profile = await db.family_profiles.find_one({"user_id": user["user_id"]})
+    if not my_profile:
+        raise HTTPException(status_code=400, detail="Create a family profile first")
+    
+    try:
+        # Extract base64 data (handle data URL format)
+        image_data = photo_data.image_data
+        if ',' in image_data:
+            # Data URL format: data:image/jpeg;base64,/9j/4AAQ...
+            header, image_data = image_data.split(',', 1)
+        
+        # Decode base64
+        image_bytes = base64.b64decode(image_data)
+        
+        # Generate unique filename
+        file_ext = "jpg"  # Default to jpg
+        filename = f"profile_{my_profile['family_id']}_{uuid.uuid4().hex[:8]}.{file_ext}"
+        filepath = UPLOAD_DIR / filename
+        
+        # Save file
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+        
+        # Generate URL (relative path that will be served)
+        photo_url = f"/api/uploads/{filename}"
+        
+        # Update profile with new photo URL
+        await db.family_profiles.update_one(
+            {"family_id": my_profile["family_id"]},
+            {"$set": {"profile_picture": photo_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"photo_url": photo_url, "message": "Photo uploaded successfully"}
+    except Exception as e:
+        logger.error(f"Photo upload error: {e}")
+        raise HTTPException(status_code=400, detail="Failed to upload photo")
+
+@api_router.get("/uploads/{filename}")
+async def serve_upload(filename: str):
+    """Serve uploaded files"""
+    filepath = UPLOAD_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(filepath)
+
 # ============ FAMILY DISCOVERY ENDPOINTS ============
 
 @api_router.get("/families/nearby")
