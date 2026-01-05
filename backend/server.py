@@ -1979,6 +1979,17 @@ async def root():
 # Include router
 app.include_router(api_router)
 
+# Health check endpoint for Kubernetes (must be at /health, not /api/health)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes liveness/readiness probes"""
+    try:
+        # Check MongoDB connection
+        await db.command("ping")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
