@@ -86,7 +86,7 @@ const Dashboard = () => {
             </p>
           </div>
           <Link to="/events/create">
-            <Button className="btn-primary" data-testid="create-event-btn">
+            <Button className="btn-coral" data-testid="create-event-btn">
               <Plus className="w-4 h-4 mr-2" />
               Create Event
             </Button>
@@ -111,7 +111,7 @@ const Dashboard = () => {
                   <p className="text-lg font-bold text-[#264653]">{getTrialDaysLeft()} days left</p>
                 </div>
               </div>
-              <Link to="/pricing" className="text-sm text-[#2A9D8F] font-medium mt-2 inline-block hover:underline">
+                <Link to="/pricing" className="text-sm text-[#C8907A] font-medium mt-2 inline-block hover:underline">
                 Upgrade now →
               </Link>
             </motion.div>
@@ -183,7 +183,7 @@ const Dashboard = () => {
                 <h2 className="font-fraunces text-xl font-semibold text-[#264653]">
                   Families Near You
                 </h2>
-                <Link to="/discover" className="text-[#2A9D8F] text-sm font-medium hover:underline">
+                <Link to="/discover" className="text-[#C8907A] text-sm font-medium hover:underline">
                   View all →
                 </Link>
               </div>
@@ -254,7 +254,7 @@ const Dashboard = () => {
                 <h2 className="font-fraunces text-xl font-semibold text-[#264653]">
                   Upcoming Events
                 </h2>
-                <Link to="/events" className="text-[#2A9D8F] text-sm font-medium hover:underline">
+                <Link to="/events" className="text-[#C8907A] text-sm font-medium hover:underline">
                   View all →
                 </Link>
               </div>
@@ -267,7 +267,7 @@ const Dashboard = () => {
                 <div className="text-center py-8">
                   <Calendar className="w-12 h-12 text-[#5F6F75]/30 mx-auto mb-3" />
                   <p className="text-[#5F6F75]">No upcoming events</p>
-                  <Link to="/events/create" className="text-sm text-[#2A9D8F] font-medium hover:underline">
+                  <Link to="/events/create" className="text-sm text-[#C8907A] font-medium hover:underline">
                     Create one →
                   </Link>
                 </div>
@@ -307,16 +307,16 @@ const Dashboard = () => {
                 Quick Actions
               </h2>
               <div className="space-y-2">
-                <Link to="/discover" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F4F1DE] transition-colors" data-testid="quick-discover">
-                  <MapPin className="w-5 h-5 text-[#2A9D8F]" />
+                <Link to="/discover" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#C8907A]/10 transition-colors" data-testid="quick-discover">
+                  <MapPin className="w-5 h-5 text-[#C8907A]" />
                   <span className="text-[#264653]">Find Families</span>
                 </Link>
-                <Link to="/events" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F4F1DE] transition-colors" data-testid="quick-events">
-                  <Calendar className="w-5 h-5 text-[#2A9D8F]" />
+                <Link to="/events" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#C8907A]/10 transition-colors" data-testid="quick-events">
+                  <Calendar className="w-5 h-5 text-[#C8907A]" />
                   <span className="text-[#264653]">Browse Events</span>
                 </Link>
-                <Link to="/messages" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F4F1DE] transition-colors" data-testid="quick-messages">
-                  <MessageCircle className="w-5 h-5 text-[#2A9D8F]" />
+                <Link to="/messages" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#C8907A]/10 transition-colors" data-testid="quick-messages">
+                  <MessageCircle className="w-5 h-5 text-[#C8907A]" />
                   <span className="text-[#264653]">Messages</span>
                 </Link>
               </div>
