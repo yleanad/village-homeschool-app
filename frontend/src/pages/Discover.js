@@ -136,7 +136,7 @@ const Discover = () => {
                 <SelectItem value="100">Within 100 miles</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleSearch} className="btn-primary h-11" data-testid="search-btn">
+            <Button onClick={handleSearch} className="btn-coral h-11" data-testid="search-btn">
               <Search className="w-4 h-4 mr-2" />
               Search
             </Button>
@@ -167,7 +167,7 @@ const Discover = () => {
                   <Link to={`/family/${family.family_id}`} data-testid={`family-card-${index}`}>
                     <div className="family-card p-5 h-full">
                       <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-full bg-[#2A9D8F]/10 flex items-center justify-center text-[#2A9D8F] font-semibold text-lg flex-shrink-0">
+                        <div className="w-14 h-14 rounded-full bg-[#C8907A]/15 flex items-center justify-center text-[#C8907A] font-semibold text-lg flex-shrink-0">
                           {family.family_name?.charAt(0) || 'F'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -178,7 +178,7 @@ const Discover = () => {
                             <MapPin className="w-4 h-4" />
                             {family.city}, {family.state}
                             {family.distance && (
-                              <span className="ml-1 text-[#2A9D8F] font-medium">
+                              <span className="ml-1 text-[#C8907A] font-medium">
                                 · {family.distance} mi
                               </span>
                             )}
@@ -244,7 +244,7 @@ const Discover = () => {
                       )}
                       <Link 
                         to={`/family/${family.family_id}`}
-                        className="text-sm text-[#2A9D8F] font-medium mt-2 inline-block"
+                        className="text-sm text-[#C8907A] font-medium mt-2 inline-block"
                       >
                         View Profile →
                       </Link>

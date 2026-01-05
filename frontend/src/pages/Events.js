@@ -55,7 +55,7 @@ const Events = () => {
             </p>
           </div>
           <Link to="/events/create">
-            <Button className="btn-primary" data-testid="create-event-btn">
+            <Button className="btn-coral" data-testid="create-event-btn">
               <Plus className="w-4 h-4 mr-2" />
               Create Event
             </Button>
@@ -129,7 +129,7 @@ const Events = () => {
                         <Users className="w-4 h-4" />
                         {event.attendees?.length || 0} attending
                         {event.max_attendees && (
-                          <span className="text-[#2A9D8F]">
+                          <span className="text-[#C8907A]">
                             · {event.max_attendees - (event.attendees?.length || 0)} spots left
                           </span>
                         )}
