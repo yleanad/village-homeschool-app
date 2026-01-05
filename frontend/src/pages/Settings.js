@@ -171,11 +171,63 @@ const Settings = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl border border-[#E0E0E0] p-6"
             >
-              <h2 className="font-fraunces text-xl font-semibold text-[#264653] mb-6">
+              <h2 className="font-fraunces text-xl font-semibold text-[#2C3E50] mb-6">
                 Family Profile
               </h2>
 
               <div className="space-y-6">
+                {/* Profile Photo */}
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    {familyProfile?.profile_picture ? (
+                      <img
+                        src={familyProfile.profile_picture.startsWith('/api') 
+                          ? `${API_URL}${familyProfile.profile_picture}` 
+                          : familyProfile.profile_picture}
+                        alt="Profile"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-[#F5F3EE]"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-[#5B9A8B] flex items-center justify-center text-white text-3xl font-bold border-4 border-[#F5F3EE]">
+                        {familyProfile?.family_name?.charAt(0) || 'F'}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#5B9A8B] text-white flex items-center justify-center hover:bg-[#4A8275] transition shadow-md"
+                      data-testid="upload-photo-btn"
+                    >
+                      {uploadingPhoto ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[#2C3E50]">Profile Photo</h3>
+                    <p className="text-sm text-[#5F6F75]">JPG, PNG up to 5MB</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="mt-2"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Basic Info */}
                 <div>
                   <Label>Family Name</Label>
