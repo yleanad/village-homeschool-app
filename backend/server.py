@@ -40,7 +40,7 @@ STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
 # VAPID Configuration for Push Notifications
 VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY')
 VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY')
-VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'support@villagefriends.app')
+VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'villagefriendsconnect@gmail.com')
 
 # Subscription Plans
 SUBSCRIPTION_PLANS = {

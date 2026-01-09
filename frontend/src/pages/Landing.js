@@ -426,7 +426,7 @@ const Landing = () => {
             <div className="flex items-center gap-6 text-white/70 text-sm">
               <Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-white transition">Terms of Service</Link>
-              <a href="mailto:support@villagefriends.app" className="hover:text-white transition">Contact</a>
+              <a href="mailto:villagefriendsconnect@gmail.com" className="hover:text-white transition">Contact</a>
             </div>
             <p className="text-white/50 text-sm">
               © 2025 Village Friends. All rights reserved.

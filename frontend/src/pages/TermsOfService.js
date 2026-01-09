@@ -150,7 +150,7 @@ const TermsOfService = () => {
             <p className="text-[#5F6F75] leading-relaxed">
               For questions about these terms, please contact us at:
             </p>
-            <p className="text-[#C8907A] font-medium">support@villagefriends.app</p>
+            <p className="text-[#C8907A] font-medium">villagefriendsconnect@gmail.com</p>
           </section>
 
           <div className="pt-6 border-t border-[#E0E0E0]">
